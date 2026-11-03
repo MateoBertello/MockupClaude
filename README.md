@@ -1,26 +1,67 @@
 # Centro de Ayuda BuhoManager · mockup
 
-Mockup interactivo de alta fidelidad del Centro de Ayuda de BuhoManager.
+Mockup interactivo del Centro de Ayuda de BuhoManager. Es un sitio estático: HTML, CSS y módulos de JavaScript, sin paso de compilación ni dependencias.
 
-- `index.html`: la página completa (HTML, CSS y JS en un solo archivo, Tailwind por CDN opcional).
-- `videos/`: los tutoriales de la Caja recomprimidos a 720p para la web.
-- `posters/`: cuadros de portada de cada video.
+## Estructura
 
-## Qué incluye
+```
+index.html              Marcado de la página (pestañas, réplica, overlays)
+favicon.svg
+vercel.json             Configuración de Vercel (URLs limpias, caché de videos)
+css/
+  tokens.css            Paleta oficial y tema claro/oscuro
+  base.css              Reset, encabezado, pestañas, píldoras, controles
+  caja.css              Mapa de la Caja, réplica, ventanas de práctica, inspector
+  secciones.css         Respuestas rápidas, Videos, Sistema web
+  overlays.css          Hoja de atajos y buscador
+js/
+  main.js               Punto de entrada y teclado global
+  router.js             Pestañas y enlaces directos (#caja, #videos, #web, #punto-<id>, #video-<nn>)
+  state.js              Estado de la venta de práctica
+  utils.js              Utilidades (DOM, formato, búsqueda sin tildes)
+  icons.js              Íconos SVG
+  data/
+    spots.js            Los 19 puntos del mapa: textos, atajos, tramos de video
+    videos.js           Videos, capítulos y transcripciones con tiempos
+    content.js          Atajos, catálogo de ejemplo, medios de pago, respuestas rápidas, módulos web
+  caja/
+    index.js            Arma la pestaña Mapa de la Caja
+    replica.js          Dibuja la réplica y recibe los toques
+    actions.js          Qué hace cada botón en el modo Practicar
+    dialogs.js          Cantidad, Descuento, Cambio de precio, Productos, Pago detallado
+    inspector.js        Panel lateral
+    player.js           Video sincronizado del panel lateral
+  videos.js             Pestaña Videos tutoriales
+  web.js                Pestaña Sistema web
+  cheatsheet.js         Hoja de atajos
+  search.js             Buscador instantáneo (Ctrl K)
+  overlay.js            Abrir y cerrar capas devolviendo el foco
+videos/                 Tutoriales de la Caja en 720p
+posters/                Portadas de los videos
+```
 
-1. **Mapa de la Caja**: réplica esquemática de la pantalla de venta (4.46.1) con 19 puntos.
-   - *Explorar*: al pasar el cursor el panel lateral explica el botón; al hacer clic se reproduce el tramo exacto del video, con la transcripción sincronizada.
-   - *Practicar*: los botones funcionan con una venta de ejemplo (cantidades, descuento, cambio de precio, quitar renglón con la regla del descuento, Productos con la tecla B, Pago detallado con medios combinados, Limpiar, Volver y Pagar).
-2. **Hoja de atajos** (menú de tres rayas o tecla `?`): teclado visual, presionar una tecla resalta su función.
-3. **Videos tutoriales**: 01, 02, 03, 04 y 06 con transcripción paso a paso por capítulos.
-4. **Sistema web**: menú de sistema.buhomanager.com con la guía interactiva de Artículos.
-5. **Buscador instantáneo** (`Ctrl K` o `/`) sobre botones, atajos, respuestas rápidas, momentos de los videos y módulos web.
+Para cambiar contenido casi siempre alcanza con editar `js/data/`.
 
-Para verlo localmente hace falta servir la carpeta (los videos se cargan por ruta relativa):
+## Verlo en la computadora
+
+Los módulos de JavaScript no funcionan abriendo el archivo con doble clic; hay que servir la carpeta:
 
 ```bash
-python3 -m http.server 8000
+npx serve .
 ```
+
+## Publicar en Vercel
+
+El proyecto de Vercel ya está conectado a este repositorio, así que cada push publica solo.
+
+En el proyecto, en Settings → Build and Deployment, conviene revisar:
+
+- Framework Preset: **Other**
+- Build Command: vacío
+- Output Directory: vacío (la raíz del repositorio)
+- Install Command: vacío
+
+En Settings → Git, la rama de producción tiene que ser la rama donde está este código.
 
 ## Pendiente de confirmar
 

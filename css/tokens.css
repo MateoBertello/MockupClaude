@@ -1,0 +1,30 @@
+/* Tokens de color y tipografía. Tema claro en :root, oscuro por preferencia del sistema o data-theme. */
+/* Layout: guía de la Caja en vista dividida (mapa interactivo | inspector con video sincronizado), pestañas sin recarga arriba. */
+:root{
+  /* Paleta oficial BuhoManager */
+  --brand:#1E6B9B; --brand-deep:#0D4C73; --pos-gray:#E5E7EB; --keypad:#34495E; --bar:#1A1A1A;
+  --act-blue:#3B82C4; --act-green:#288E3B; --act-red:#9E3B3B; --act-orange:#F59E0B; --act-volver:#C98A1B;
+  /* Interfaz del centro de ayuda (tema claro) */
+  --bg:#F2F5F8; --surface:#FFFFFF; --surface-2:#EAF0F4; --fg:#10222E; --muted:#566874; --line:#D5DFE6;
+  --accent-text:#1E6B9B; --orange-text:#9A5B00; --orange-soft:#FEF3DC; --warn-bg:#FBEDED; --warn-fg:#7A2727; --warn-line:#E7B9B9;
+  --green-soft:#E3F3E6; --green-text:#1E6E2E; --blue-soft:#E2EEF7; --header:#0D4C73; --header-fg:#FFFFFF; --shadow:0 1px 2px rgba(13,76,115,.06),0 8px 24px rgba(13,76,115,.08);
+  /* Réplica de la Caja: aspecto único, igual en ambos temas */
+  --r-bg:#F6F6F6; --r-panel:#D6D6D6; --r-panel-line:#A9A9A9; --r-grid:#9DB3C8; --r-sel:#B9CFE5; --r-text:#141414; --r-muted:#8A8A8A; --r-white:#FFFFFF; --r-dlg:#EEEEEE; --r-dlg-head:#D8D8D8; --r-desc:#1F45C8; --r-digit:#22313F;
+  --font-ui:"Plus Jakarta Sans","Segoe UI",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --font-pos:Tahoma,"Segoe UI","DejaVu Sans",Verdana,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A1620; --surface:#10212E; --surface-2:#0D1B26; --fg:#E3ECF2; --muted:#93A7B5; --line:#203849;
+    --accent-text:#74BBE6; --orange-text:#F8B547; --orange-soft:#33260E; --warn-bg:#2B1616; --warn-fg:#F2BDBD; --warn-line:#5A2C2C;
+    --green-soft:#12301B; --green-text:#8FD69F; --blue-soft:#132E42; --header:#082F48; --header-fg:#FFFFFF; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A1620; --surface:#10212E; --surface-2:#0D1B26; --fg:#E3ECF2; --muted:#93A7B5; --line:#203849;
+  --accent-text:#74BBE6; --orange-text:#F8B547; --orange-soft:#33260E; --warn-bg:#2B1616; --warn-fg:#F2BDBD; --warn-line:#5A2C2C;
+  --green-soft:#12301B; --green-text:#8FD69F; --blue-soft:#132E42; --header:#082F48; --header-fg:#FFFFFF; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  color-scheme:dark;
+}
