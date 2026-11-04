@@ -94,7 +94,7 @@ export function goWeb(mod, sub = null) {
 export function follow(go) {
   if (go.spot) goSpot(go.spot, go);
   else if (go.video) goVideo(go.video, go.t || 0);
-  else if (go.shortcut) { openCheat(); flashShortcut(go.shortcut); }
+  else if (go.shortcut) { openCheat(); flashShortcut(go.shortcut, go.state); }
   else if (go.web) goWeb(go.web, go.sub || null);
 }
 

@@ -6,8 +6,9 @@ Fusiona dos propuestas: de MockupChatGPT toma el selector Caja POS / Sistema Web
 
 ## Recorrido
 
-- **Caja POS** (`#caja`): portada con buscador, ruta de los videos 01 a 06 con progreso, accesos directos, la Caja de práctica (`#mapa`, `#punto-<id>`) y respuestas rápidas.
-- **Lección** (`#video-01` … `#video-06`): video, capítulos, paso a paso que se marca solo, la narración literal desplegable, "Ver en la Caja" en cada paso y "Probalo en la Caja" al final.
+- **Caja POS** (`#caja`): portada con buscador, ruta de los videos 01 a 08 con progreso, accesos directos, la Caja de práctica (`#mapa`, `#punto-<id>`) y respuestas rápidas.
+- **Caja de práctica**: réplica con la piel real de la Caja (`assets/caja`, de `light_small`) y las medidas de sus archivos `designx` (venta, cobro, búsquedas y ventanas). En Practicar responden los botones y las teclas reales del keymap.
+- **Lección** (`#video-01` … `#video-08`): video, capítulos, paso a paso que se marca solo, la narración literal desplegable, "Ver en la Caja" en cada paso y "Probalo en la Caja" al final.
 - **Sistema Web** (`#web`, `#web-<módulo>`): grilla de los 12 módulos y, al entrar, el menú real con la guía del módulo.
 
 ## Estructura
@@ -32,11 +33,12 @@ js/
   cheatsheet.js         Hoja de atajos
   search.js             Buscador instantáneo (Ctrl K o /)
   overlay.js            Abrir y cerrar capas devolviendo el foco
+  keys.js               Traduce las teclas del navegador al keymap de la Caja
   utils.js, icons.js    Utilidades e íconos
   data/
     videos.js           Videos: capítulos, paso a paso y narración con tiempos
     spots.js            Los 19 puntos del mapa
-    content.js          Atajos, catálogo de ejemplo, accesos, respuestas rápidas y módulos web
+    content.js          Keymap real por pantalla, menú, catálogo y clientes de ejemplo, accesos, respuestas y módulos web
   caja/
     index.js            Inicio de Caja POS
     replica.js          Dibuja la réplica y recibe los toques
@@ -44,7 +46,8 @@ js/
     dialogs.js          Cantidad, Descuento, Cambio de precio, Productos, Pago detallado
     inspector.js        Panel lateral del mapa
     player.js           Video sincronizado del panel lateral
-videos/                 Tutoriales 01 a 06 en 720p
+assets/caja/            Imágenes reales de la Caja (fondos y botones de light_small)
+videos/                 Tutoriales 01 a 08 en 720p
 posters/                Portadas de los videos
 ```
 
@@ -73,8 +76,6 @@ En el proyecto, en Settings → Build and Deployment, conviene revisar:
 
 En Settings → Git, la rama de producción tiene que ser la rama donde está este código.
 
-## Pendiente de confirmar
+## Atajos
 
-El menú que se ve en el video 02 (Caja 4.44.3) muestra otros atajos que la lista usada en el mockup:
-Arqueo Caja (A), Factura Electrónica (Z), Imprimir Ticket (I), Reimpresión Local (D), Reimpresión Server (CTRL+D) y Resumir Venta (J).
-En la lista del mockup además Arqueo Caja y Nota Crédito Libre comparten la N. La hoja de atajos marca estas diferencias.
+Los atajos salen del keymap de la Caja (`retail33.pos.actions`), separados por pantalla: en venta, sin venta, en el cobro y otras (arqueo, cierre de día, horario y CAEA). Las teclas "Num" son las del teclado numérico.

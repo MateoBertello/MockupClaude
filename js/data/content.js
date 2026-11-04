@@ -3,22 +3,154 @@
 
 import { I } from '../icons.js';
 
-/* Atajos del menú de tres rayas. vid: lo que muestra el menú del video 02 (Caja 4.44.3) cuando difiere. */
-export const SHORTCUTS = [
-  { g: 'En la venta', label: 'Productos', keys: ['B'], desc: 'Busca artículos por nombre.' },
-  { g: 'Clientes y cobros', label: 'Agregar cliente', keys: ['CTRL', 'A'], desc: 'Carga un cliente sin salir de la Caja.' },
-  { g: 'Clientes y cobros', label: 'Cobro Cta Cte', keys: ['CTRL', 'C'], desc: 'Abre el cobro de cuenta corriente.' },
-  { g: 'Dinero en caja', label: 'Arqueo Caja', keys: ['N'], vid: 'A', desc: 'Cuenta el dinero de la caja y lo compara con lo registrado.' },
-  { g: 'Dinero en caja', label: 'Ingreso Dinero', keys: ['F'], desc: 'Registra un ingreso de dinero.' },
-  { g: 'Dinero en caja', label: 'Gastos', keys: ['CTRL', 'G'], desc: 'Declara un gasto.' },
-  { g: 'Comprobantes', label: 'Factura Electrónica', keys: ['E'], vid: 'Z', desc: 'Abre la factura electrónica.' },
-  { g: 'Comprobantes', label: 'Imprimir', keys: ['P'], vid: 'I', desc: 'Imprime el ticket.' },
-  { g: 'Comprobantes', label: 'Nota Crédito Libre', keys: ['N'], desc: 'Abre una nota de crédito libre.' },
-  { g: 'Comprobantes', label: 'Reimpresión Local', keys: ['R'], vid: 'D', desc: 'Reimprime un comprobante guardado en esta PC.' },
-  { g: 'Comprobantes', label: 'Reimpresión Server', keys: ['CTRL', 'R'], vid: 'CTRL+D', desc: 'Reimprime un comprobante guardado en el servidor.' },
-  { g: 'Comprobantes', label: 'Resumen Venta', keys: ['X'], vid: 'J', desc: 'Muestra el resumen de la venta.' },
-  { g: 'Datos de la Caja', label: 'Recargar Artículos', keys: ['CTRL', 'Q'], desc: 'Trae los artículos y precios actualizados desde la web.' },
-  { g: 'Datos de la Caja', label: 'Recargar Clientes', keys: ['CTRL', 'L'], desc: 'Trae la lista de clientes actualizada.' }
+/* Atajos reales de la Caja (keymap de retail33), separados por la pantalla en la que funcionan.
+   keys: combinaciones alternativas. Teclas: letras, dígitos, Enter, Espacio, Esc, Supr, F1, CTRL+…,
+   y las del teclado numérico como "Num +", "Num −", "Num .", "Num *", "Num /".
+   menu: figura en el menú de tres rayas. spot: punto del mapa que hace lo mismo. */
+export const KEY_STATES = [
+  {
+    id: 'venta', label: 'En venta', desc: 'Con artículos en el carrito.',
+    groups: [
+      ['Artículos', [
+        { label: 'Agregar el código escrito', keys: ['Enter'], spot: 'codigo' },
+        { label: 'Buscar artículo', keys: ['B'], desc: 'Abre Productos con el filtro vacío.', spot: 'productos' },
+        { label: 'Buscar artículo sin borrar el filtro', keys: ['V'], desc: 'Abre Productos con la última búsqueda.' },
+        { label: 'Subir la cantidad', keys: ['Num +'], spot: 'mas' },
+        { label: 'Bajar la cantidad', keys: ['Num −'], spot: 'menos' },
+        { label: 'Cantidad exacta', keys: ['CTRL+Q'], spot: 'cantidad' },
+        { label: 'Cambio de precio', keys: ['S'], spot: 'lapiz' },
+        { label: 'Descuento al artículo', keys: ['H'], spot: 'etiqueta' },
+        { label: 'Descuento total', keys: ['D'], menu: true, desc: 'Descuento sobre toda la venta.' },
+        { label: 'Quitar renglón', keys: ['Supr'], spot: 'tacho' },
+        { label: 'Subir la selección', keys: ['CTRL+Num −'], spot: 'arriba' },
+        { label: 'Bajar la selección', keys: ['CTRL+Num +'], spot: 'abajo' },
+        { label: 'Detalle de stock', keys: ['CTRL+S'], spot: 'stock' },
+        { label: 'Devolución de artículo', keys: ['CTRL+D'], menu: true }
+      ]],
+      ['La venta', [
+        { label: 'Pagar', keys: ['P', 'Espacio', 'Num .'], desc: 'Abre Pago detallado.', spot: 'pagar' },
+        { label: 'Cancelar la venta', keys: ['C'], spot: 'cancelar' },
+        { label: 'Suspender venta', keys: ['J'], menu: true, desc: 'La deja en espera para retomarla después.' },
+        { label: 'Factura Electrónica', keys: ['Z'], menu: true, desc: 'Elige el tipo de comprobante.', spot: 'comprobante' }
+      ]],
+      ['Clientes', [
+        { label: 'Buscar cliente del local', keys: ['X'], spot: 'clienteBuscar' },
+        { label: 'Cliente de facturación', keys: ['O'], menu: true, spot: 'clienteFact' },
+        { label: 'Copiar el cliente a la factura', keys: ['E'], spot: 'copiar' }
+      ]],
+      ['Caja y dinero', [
+        { label: 'Menú', keys: ['CTRL+M'], spot: 'menu' },
+        { label: 'Ingreso de dinero', keys: ['F'] },
+        { label: 'Retiro de dinero', keys: ['R'] },
+        { label: 'Arqueo de caja', keys: ['A'] },
+        { label: 'Gastos', keys: ['CTRL+G'], menu: true },
+        { label: 'Reimprimir el último ticket', keys: ['I'] }
+      ]],
+      ['Listas de precio', [
+        { label: 'Usar la lista 0 a 5', keys: ['CTRL+0', 'CTRL+1', 'CTRL+2', 'CTRL+3', 'CTRL+4', 'CTRL+5'] },
+        { label: 'Elegir una lista', keys: ['CTRL+6'] },
+        { label: 'Cambiar de lista', keys: ['Num /'] }
+      ]]
+    ]
+  },
+  {
+    id: 'libre', label: 'Sin venta', desc: 'La Caja lista para empezar, con el carrito vacío.',
+    groups: [
+      ['Para empezar', [
+        { label: 'Agregar el código escrito', keys: ['Enter'], spot: 'codigo' },
+        { label: 'Buscar artículo', keys: ['B'], spot: 'productos' },
+        { label: 'Buscar artículo sin borrar el filtro', keys: ['V'] },
+        { label: 'Resumir venta', keys: ['J'], menu: true, desc: 'Retoma una venta suspendida.' },
+        { label: 'Cancelar', keys: ['C'], spot: 'cancelar' }
+      ]],
+      ['Clientes', [
+        { label: 'Buscar cliente', keys: ['X'], spot: 'clienteBuscar' },
+        { label: 'Agregar cliente', keys: ['CTRL+A'], menu: true },
+        { label: 'Cobro de cuenta corriente', keys: ['CTRL+C'], menu: true },
+        { label: 'Recargar clientes', keys: ['CTRL+L'], menu: true }
+      ]],
+      ['Caja y dinero', [
+        { label: 'Menú', keys: ['CTRL+M'], spot: 'menu' },
+        { label: 'Ingreso de dinero', keys: ['F'], menu: true },
+        { label: 'Retiro de dinero', keys: ['R'], menu: true },
+        { label: 'Arqueo de caja', keys: ['A'], menu: true },
+        { label: 'Gastos', keys: ['CTRL+G'], menu: true }
+      ]],
+      ['Comprobantes', [
+        { label: 'Factura Electrónica', keys: ['Z'], menu: true },
+        { label: 'Nota de Crédito Libre', keys: ['N'], menu: true },
+        { label: 'Imprimir ticket', keys: ['I'], menu: true, desc: 'Reimprime el último ticket.' },
+        { label: 'Reimpresión local', keys: ['D'], menu: true },
+        { label: 'Reimpresión desde el servidor', keys: ['CTRL+D'], menu: true }
+      ]],
+      ['Mantenimiento', [
+        { label: 'Recargar artículos', keys: ['CTRL+Q'], menu: true, desc: 'Trae los artículos y precios actualizados desde la web.' },
+        { label: 'Forzar la descarga de datos', keys: ['CTRL+F'] },
+        { label: 'Configurar la impresora', keys: ['CTRL+I'] },
+        { label: 'Configurar el servidor', keys: ['CTRL+U'] },
+        { label: 'Usar la lista de precio 0 a 5', keys: ['CTRL+0', 'CTRL+1', 'CTRL+2', 'CTRL+3', 'CTRL+4', 'CTRL+5'] },
+        { label: 'Elegir una lista de precio', keys: ['CTRL+6'] },
+        { label: 'Cambiar de lista de precio', keys: ['Num /'] }
+      ]]
+    ]
+  },
+  {
+    id: 'cobro', label: 'En el cobro', desc: 'Con Pago detallado abierto.',
+    groups: [
+      ['Medios de pago', [
+        { label: 'Efectivo', keys: ['1'] },
+        { label: 'Cuenta corriente', keys: ['2'] },
+        { label: 'Tarjeta de débito', keys: ['3'] },
+        { label: 'Tarjeta de crédito', keys: ['4'] },
+        { label: 'Transferencia', keys: ['5'] },
+        { label: 'MercadoPago', keys: ['6'] },
+        { label: 'Más opciones', keys: ['M'] }
+      ]],
+      ['Cerrar o volver', [
+        { label: 'Pagar y empezar otra venta', keys: ['P', 'Espacio', 'F1', 'Num .'], spot: 'pagar' },
+        { label: 'Volver a la venta', keys: ['Esc', 'V', 'Num *'] },
+        { label: 'Limpiar los pagos', keys: ['L'] },
+        { label: 'Cancelar la venta', keys: ['F'], desc: 'Ojo: en el cobro la F cancela la venta.' }
+      ]],
+      ['Clientes y factura', [
+        { label: 'Cargar cliente', keys: ['D'] },
+        { label: 'Factura Electrónica', keys: ['Z'], spot: 'comprobante' },
+        { label: 'Cliente de facturación', keys: ['O'], spot: 'clienteFact' }
+      ]]
+    ]
+  },
+  {
+    id: 'otras', label: 'Otras pantallas', desc: 'Arqueo, cierre de día, horario y CAEA.',
+    groups: [
+      ['Arqueo', [
+        { label: 'Ir al cierre de día', keys: ['C'] },
+        { label: 'Volver al inicio de sesión', keys: ['Espacio'] }
+      ]],
+      ['Cierre de día', [
+        { label: 'Volver al inicio de sesión', keys: ['Espacio'] }
+      ]],
+      ['Horario del personal', [
+        { label: 'Registrar entrada', keys: ['I'] },
+        { label: 'Registrar salida', keys: ['O'] },
+        { label: 'Volver a la venta', keys: ['Esc', 'V'] }
+      ]],
+      ['CAEA', [
+        { label: 'Solicitar CAEA', keys: ['I'] },
+        { label: 'Informar CAEA', keys: ['J'] },
+        { label: 'Volver a la venta', keys: ['Esc', 'V'] }
+      ]]
+    ]
+  }
+];
+
+/** Todos los atajos en una lista plana: { state, group, label, keys, ... }. */
+export const ALL_SHORTCUTS = KEY_STATES.flatMap(st => st.groups.flatMap(([group, list]) => list.map(k => ({ ...k, state: st.id, stateLabel: st.label, group }))));
+
+/* Opciones del menú de tres rayas, tal como aparecen en la Caja 4.46.1 (pantalla sin venta). */
+export const MENU_OPTIONS = [
+  'Agregar cliente (CTRL+A)', 'Arqueo Caja (A)', 'Cobro Cta Cte(CTRL+C)', 'Factura Electronica (Z)', 'Gastos (Ctrl+G)',
+  'Imprimir Ticket (i)', 'Ingreso Dinero (F)', 'Nota Credito Libre (N)', 'Recargar Articulos (CTRL+Q)', 'Recargar Clientes (CTRL+L)',
+  'Reimpresion Local (D)', 'Reimpresion Server (CTRL+D)', 'Resumir Venta (J)', 'Retiro Dinero (R)'
 ];
 
 /* Artículos de ejemplo tomados de las capturas: [código, nombre, precio]. */
@@ -36,6 +168,14 @@ export const sampleSale = () => [
   { t: 'i', id: 2, code: '1', name: '1/4 Muzza', qty: 1, price: 6200 }
 ];
 
+/* Clientes de ejemplo para la búsqueda de clientes. */
+export const CUSTOMERS = [
+  { doc: '20304050', name: 'Cliente de ejemplo', iva: 'Consumidor Final', balance: -4220 },
+  { doc: '27111222', name: 'Comercio de ejemplo', iva: 'Responsable Inscripto', balance: 0 },
+  { doc: '30555666', name: 'Mayorista de ejemplo', iva: 'Monotributo', balance: 1500 },
+  { doc: '23999888', name: 'Cliente frecuente de ejemplo', iva: 'Consumidor Final', balance: -800 }
+];
+
 /* Medios de Pago detallado, en el orden de la Caja (teclas 1 a 6). */
 export const MEDIOS = [['Efectivo', I.cash], ['Cta Cte', I.bank], ['T. Débito', I.card], ['T. Crédito', I.card], ['Transferencia', I.transfer], ['MercadoPago', I.mp]];
 
@@ -46,7 +186,10 @@ export const TASKS = [
   { title: 'Aplicar un descuento', sub: 'Etiqueta verde · % o $', icon: 'tag', go: { video: '04', t: 0 } },
   { title: 'Cambiar un precio', sub: 'Lápiz naranja', icon: 'edit', go: { video: '04', t: 25.5 } },
   { title: 'Quitar un artículo', sub: 'Tacho rojo · confirmación', icon: 'trash', go: { video: '05', t: 0 } },
-  { title: 'Cobrar con dos medios', sub: 'Pago detallado', icon: 'card', go: { video: '06', t: 0 } }
+  { title: 'Cobrar con dos medios', sub: 'Pago detallado', icon: 'card', go: { video: '06', t: 0 } },
+  { title: 'Agregar un cliente', sub: 'Menú o CTRL+A sin venta', icon: 'users', go: { video: '07', t: 0 } },
+  { title: 'Facturar a un cliente', sub: 'Panel Factura · Factura B', icon: 'receipt', go: { video: '08', t: 43.5 } },
+  { title: 'Ver todos los atajos', sub: 'Por pantalla de la Caja', icon: 'keyboard', go: { shortcut: 'Buscar artículo' } }
 ];
 
 /* Respuestas rápidas: problemas concretos de la caja. go: adónde lleva el botón. */
@@ -56,7 +199,7 @@ export const QUICK = [
   { q: 'No me acuerdo el código del artículo', a: 'Presioná Productos o la tecla B y escribí parte del nombre. La lista se achica mientras escribís.', label: 'Probalo en la Caja', go: { spot: 'productos', practice: true } },
   { q: '¿Qué significa VENTA FAC. ELECTRONICA MANUAL?', a: 'Que esa venta se factura a mano en la página de ARCA. Miralo siempre antes de cobrar.', label: 'Ver en el video 01 · 0:21', go: { video: '01', t: 21 } },
   { q: 'Me equivoqué al cargar un pago', a: 'Limpiar borra todos los pagos de la lista, previa confirmación. Después volvé a cargarlos.', label: 'Ver en el video 06 · 0:27', go: { video: '06', t: 27 } },
-  { q: 'Cambié precios en la web y la Caja no los muestra', a: 'Recargá los artículos con CTRL+Q, o desde el menú de tres rayas.', label: 'Ver los atajos', go: { shortcut: 'Recargar Artículos' } }
+  { q: 'Cambié precios en la web y la Caja no los muestra', a: 'Sin venta en curso, recargá los artículos con CTRL+Q o desde el menú de tres rayas.', label: 'Ver los atajos', go: { shortcut: 'Recargar artículos' } }
 ];
 
 /* Menú de sistema.buhomanager.com. subs: [nombre, descripción, tiene guía interactiva]. */

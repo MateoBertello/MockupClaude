@@ -3,7 +3,7 @@
 import { $, $$, esc, mmss, norm, plain } from './utils.js';
 import { SPOTS, SPOT_IDS } from './data/spots.js';
 import { VIDEOS } from './data/videos.js';
-import { SHORTCUTS, QUICK, WEB } from './data/content.js';
+import { ALL_SHORTCUTS, QUICK, WEB } from './data/content.js';
 import { openOverlay, closeOverlay, isOpen } from './overlay.js';
 import { follow, currentEnv } from './router.js';
 
@@ -22,7 +22,7 @@ function buildIndex() {
     const s = SPOTS[id];
     add('Caja', 'C', s.label, s.what, { spot: id }, `${(s.key || []).join(' ')} ${s.warn || ''} ${s.tips.join(' ')}`);
   });
-  SHORTCUTS.forEach(s => add('Atajos', s.keys.length > 1 ? '⌃' + s.keys[1] : s.keys[0], `${s.label} (${s.keys.join('+')})`, s.desc, { shortcut: s.label }, `${s.keys.join('+')} ${s.keys.join(' ')}`));
+  ALL_SHORTCUTS.forEach(s => add('Atajos', s.keys[0].replace('CTRL+', '⌃').replace('Num ', '').slice(0, 4), `${s.label} · ${s.keys.join(' o ')}`, `${s.stateLabel}${s.desc ? ' · ' + s.desc : ''}`, { shortcut: s.label, state: s.state }, s.keys.join(' ')));
   QUICK.forEach(x => add('Respuestas rápidas', '?', x.q, x.a, x.go));
   Object.entries(VIDEOS).forEach(([id, v]) => {
     add('Videos', id, v.title, `Video ${id} · ${mmss(v.dur)} · ${v.chapters.map(c => c.title).join(', ')}`, { video: id, t: 0 }, `${v.category} ${v.desc}`);

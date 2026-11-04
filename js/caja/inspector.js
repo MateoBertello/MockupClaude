@@ -2,6 +2,7 @@
 
 import { $, esc } from '../utils.js';
 import { I } from '../icons.js';
+import { keycaps } from '../keys.js';
 import { SPOTS, GROUPS } from '../data/spots.js';
 import { S, markSeen } from '../state.js';
 import { markPinned, renderDots } from './replica.js';
@@ -22,13 +23,12 @@ export function pin(id, opts = {}) {
   renderInfo();
   renderChips();
   if (opts.video !== false && SPOTS[id].refs[0]) cueRef(SPOTS[id].refs[0], !!opts.play);
+  $('#insp .vid').hidden = !SPOTS[id].refs.length;
 }
 
 export function renderInfo() {
   const id = S.preview || S.pinned, s = SPOTS[id], [groupName, groupCls] = GROUPS[s.g];
-  const keys = s.key
-    ? `Atajo ${s.key.map(k => `<kbd class="key">${k}</kbd>`).join('')}`
-    : esc(s.keysNote || 'Sin atajo propio');
+  const keys = s.keys ? `<span>Atajo</span> ${keycaps(s.keys)}` : '<span>Sin atajo propio</span>';
   const swatch = s.sw ? ` style="background:${s.sw};border-color:transparent"` : '';
   const state = S.preview ? 'Vista previa' : (S.mode === 'practice' ? 'Practicando' : 'Seleccionado');
 

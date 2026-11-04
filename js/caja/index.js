@@ -8,17 +8,18 @@ import { QUICK, TASKS } from '../data/content.js';
 import { S, addLog, resetSale } from '../state.js';
 import { isDone, doneCount, nextPending, onProgress } from '../progress.js';
 import { initReplica, renderBase, renderDots, spotEl } from './replica.js';
-import { initDialogs, closeDlg, chooseMedio } from './dialogs.js';
+import { initDialogs, closeDlg } from './dialogs.js';
+import { comboFromEvent } from '../keys.js';
 import { pin, renderInfo } from './inspector.js';
 import { initPlayer, cueRef, renderChips } from './player.js';
-import { act, refresh } from './actions.js';
+import { practiceKey, refresh } from './actions.js';
 import { follow, goVideo } from '../router.js';
 
 export function setMode(mode) {
   if (S.mode === mode) return;
   S.mode = mode;
   $$('.seg [data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
-  if (mode === 'explore') closeDlg();
+  if (mode === 'explore') { closeDlg(); S.screen = 'venta'; S.pays = []; }
   else if (!S.log.length) addLog('Venta de ejemplo cargada con dos artículos.');
   refresh();
 }
@@ -29,6 +30,8 @@ function renderRoute() {
   $('#routeCount').textContent = n === total ? '¡Ruta completada!' : `${n} de ${total} vistos`;
   $('#routeFill').style.width = (n / total * 100) + '%';
   $('#routeBar').setAttribute('aria-valuenow', n);
+  $('#routeBar').setAttribute('aria-valuemax', total);
+  $('#rutaTitle').textContent = `Dominá la Caja en ${total} videos`;
   $('#routeStart').innerHTML = `${n === total ? 'Repasar la ruta' : n ? 'Seguir la ruta' : 'Empezar la ruta'} ${line('arrow')}`;
   $('#routeMeta').textContent = `${total} videos · menos de ${Math.ceil(TOTAL_DUR / 60)} minutos`;
   $('#vgrid').innerHTML = VIDEO_IDS.map(id => {
@@ -49,17 +52,16 @@ function renderStatic() {
     `<button type="button" class="qa" data-q="${i}"><h3>${esc(x.q)}</h3><p>${esc(x.a)}</p><span class="go">${esc(x.label)} ${I.arrow}</span></button>`).join('');
 }
 
-/** Teclas propias de la Caja: B abre Productos, 1 a 6 eligen medio en Pago detallado. */
+/** Teclas de la Caja con el mapa a la vista. Devuelve true si la tecla se usó. */
 export function handleCajaKey(e) {
-  if (e.key === 'Escape' && S.dlg) { closeDlg(); return true; }
-  if (/^[1-6]$/.test(e.key) && S.dlg && S.dlg.k === 'pago') { e.preventDefault(); chooseMedio(+e.key - 1); return true; }
-  if (e.key.toLowerCase() === 'b' && !S.dlg) {
-    e.preventDefault();
-    if (S.mode === 'practice') { pin('productos', { video: false }); act('productos'); }
-    else { pin('productos'); flash(spotEl('productos')); }
-    return true;
-  }
-  return false;
+  if (S.dlg) return false;
+  const combo = comboFromEvent(e);
+  if (!combo) return false;
+  const r = practiceKey(combo);
+  if (!r) return false;
+  e.preventDefault();
+  if (r.spot) flash(spotEl(r.spot));
+  return true;
 }
 
 export function initCaja() {

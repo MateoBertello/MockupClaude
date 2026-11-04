@@ -1,221 +1,251 @@
-// Ventanas que se abren dentro de la réplica en el modo Practicar:
-// Cantidad, Descuento, Cambio de precio, confirmaciones, Productos y Pago detallado.
+// Ventanas de la Caja de práctica, con la piel real y las medidas de designx:
+// confirmación (dataentry.confirmation), formularios (dataentry.medium), Productos (itemsearch),
+// Clientes (customersearch), menú de tres rayas (genericsearch) y alta de cliente.
+// También responde a los botones de la pantalla de cobro.
 
-import { $, esc, money, fmtQty, norm, box } from '../utils.js';
-import { I } from '../icons.js';
-import { CATALOG, MEDIOS } from '../data/content.js';
+import { $, esc, money, fmtQty, norm, box, fs } from '../utils.js';
+import { CATALOG, MEDIOS, CUSTOMERS, MENU_OPTIONS } from '../data/content.js';
 import { S, totals, paid, addLog, selItem, nextId, clearSale } from '../state.js';
 import { addItem, refresh } from './actions.js';
-import { renderInfo } from './inspector.js';
 
 const dlgEl = $('#rp-dlg');
+const A = p => `assets/caja/${p}`;
+export const MEDIO_NAMES = MEDIOS.map(m => m[0]);
+const customers = [...CUSTOMERS];
 
 export function openDlg(d) { S.dlg = d; renderDlg(); }
 export function closeDlg() { S.dlg = null; renderDlg(); }
 
 /* ---------- Plantillas ---------- */
-const okCancel = (ok = 'ok', can = 'close') =>
-  `<span class="abtn b-green" data-act="${ok}" role="button">${I.check}Aceptar</span><span class="abtn b-red" data-act="${can}" role="button">${I.cancel}Cancelar</span>`;
+/** Posición relativa a la ventana (W x H): de píxeles de la ventana a porcentajes. */
+const loc = (W, H) => (x, y, w, h) => `left:${x / W * 100}%;top:${y / H * 100}%;width:${w / W * 100}%;height:${h / H * 100}%`;
+const imgBtn = (b, name, act, label) => `<button type="button" class="rb dlg-btn" data-act="${act}" aria-label="${label}" style="${b}"><img src="${A('btn/' + name + '.png')}" alt=""><img class="dn" src="${A('btn/' + name + '_Press.png')}" alt=""></button>`;
+const closeBtn = b => `<button type="button" class="rb dlg-x" data-act="close" aria-label="Cerrar" style="${b}"><img src="${A('btn/Close.png')}" alt=""><img class="dn" src="${A('btn/Close_Press.png')}" alt=""></button>`;
+const text = (t, b, f, o = '') => `<div class="rl" style="${b};${fs(f)};${o}">${t}</div>`;
 
-function frame(rect, title, body, btns, cls = '') {
-  return `<div class="dlg ${cls}" style="${box(...rect)}" role="dialog" aria-label="${esc(title || 'Ventana')}">` +
-    `<div class="dlg-head"><span class="dlg-x" data-act="close" role="button" aria-label="Cerrar">✕</span></div>` +
-    `<div class="dlg-body">${title ? `<div class="dlg-title">${esc(title)}</div>` : ''}${body}</div>` +
-    (btns === false ? '' : `<div class="dlg-btns">${btns || okCancel()}</div>`) + '</div>';
+/** Ventana centrada en la pantalla de la Caja. */
+function win(W, H, inner, { bg, cls = '', label = 'Ventana', x, y } = {}) {
+  const left = x ?? (1040 - W) / 2, top = y ?? Math.max(0, (655 - H) / 2);
+  const bgStyle = bg ? `background-image:url('${A('bg/' + bg + '.png')}')` : '';
+  return `<div class="rwin ${cls}${bg ? ' has-bg' : ''}" role="dialog" aria-label="${esc(label)}" style="${box(left, top, W, H)};${bgStyle}">${inner}</div>`;
 }
 
-const keypad = name => {
-  const keys = ns => ns.map(n => `<button data-act="kp" data-n="${n}">${n}</button>`).join('');
-  return `<div class="kp-screen" id="kpS">0</div><div class="dlg-msg kp-name">${esc(name)}</div>
-    <div class="kp">
-      <button class="fn wide" data-act="close">Cerrar</button><button class="fn wide" data-act="kp-back" aria-label="Borrar">⟵</button>
-      ${keys(['7', '8', '9'])}<button class="fn" data-act="kp-inc" aria-label="Sumar uno">+</button>
-      ${keys(['4', '5', '6'])}<button class="fn" data-act="kp-dec" aria-label="Restar uno">−</button>
-      ${keys(['1', '2', '3'])}<button class="fn tall" data-act="ok" aria-label="Aceptar">↵</button>
-      <button class="wide" data-act="kp" data-n="0">0</button><button data-act="kp" data-n=".">·</button>
-    </div>`;
-};
-
-function pagoScreen() {
-  const t = totals(), p = paid();
-  const saldo = Math.max(0, t.total - p), vuelto = Math.max(0, p - t.total);
-  let h = `<div class="abs pd-bg" style="${box(0, 55, 1000, 432)}"></div><div class="abs pd-bg" style="${box(770, 55, 230, 545)}"></div>`;
-  MEDIOS.forEach(([m, ic], i) => {
-    h += `<div class="abs pd-medio" style="${box(14, 66 + i * 50, 220, 44)}"><span class="n">${i + 1}</span><span class="abtn b-blue" data-act="medio" data-m="${i}" role="button">${ic}${m}</span></div>`;
+/** Formulario como dataentry.medium: título, campos de a uno y Aceptar / Cancelar. */
+function form(title, fields, { ok = 'ok', err = '', W = 400 } = {}) {
+  const H = 78 + fields.length * 52 + 18 + 70;
+  const L = loc(W, H);
+  let h = closeBtn(L(W - 37, 5, 30, 30)) + text(esc(title), L(0, 30, W, 36), 20, 'justify-content:center');
+  fields.forEach((f, i) => {
+    const y = 78 + i * 52;
+    h += text(esc(f.label), L(50, y, 300, 20), 12);
+    const input = f.options
+      ? `<select id="${f.id}">${f.options.map(o => `<option${o === f.value ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+      : `<input id="${f.id}" value="${esc(f.value ?? '')}" inputmode="${f.num ? 'decimal' : 'text'}" autocomplete="off">`;
+    h += `<div class="rfield" style="${L(50, y + 21, 300, 26)}">${input}</div>`;
   });
-  h += `<div class="abs pd-medio" style="${box(14, 366, 220, 44)}"><span class="n">M</span><span class="abtn b-blue" style="opacity:.6">${I.more}Más..</span></div>`;
-  let rows = '<div class="h"><span>Medio de Pago</span><span>Monto</span></div>';
-  for (let i = 0; i < 12; i++) {
-    const x = S.pays[i];
-    rows += `<div class="r"><span>${x ? esc(x.medio) : '&nbsp;'}</span><span style="text-align:right">${x ? money(x.monto) : ''}</span></div>`;
-  }
-  h += `<div class="abs pd-list" style="${box(255, 66, 500, 400)}">${rows}</div>`;
-  [['Total', t.total.toFixed(2)], ['Saldo', saldo.toFixed(2)], ['Descuento', t.dsc ? t.dsc.toFixed(2) : ''], ['Vuelto', vuelto.toFixed(2)]]
-    .forEach(([label, v], i) => { h += `<div class="abs pd-box" style="${box(774, 63 + i * 70, 215, 64)}"><small>${label}</small><b>${v}</b></div>`; });
-  h += `<span class="abs abtn b-red pd-btn" style="${box(774, 415, 215, 49)}" data-act="limpiar" role="button">${I.clean}<span><span class="u">L</span>impiar</span></span>`;
-  h += `<span class="abs abtn b-volver pd-btn" style="${box(774, 473, 215, 49)}" data-act="volver" role="button">${I.back}<span><span class="u">V</span>olver</span></span>`;
-  h += `<span class="abs abtn b-green pd-btn${saldo > 0 ? ' off' : ''}" style="${box(774, 532, 215, 49)}" data-act="pd-pagar" role="button" aria-disabled="${saldo > 0}">${I.check}<span><span class="u">P</span>agar</span></span>`;
-  h += `<div class="abs pd-hint" style="${box(255, 470, 500, 18)}">Tocá un medio de pago o usá las teclas 1 a 6</div>`;
-  return h;
+  h += text(esc(err), L(20, H - 92, W - 40, 20), 12, 'justify-content:center;color:#8E1F1F').replace('class="rl"', 'class="rl rerr" id="dErr"');
+  h += imgBtn(L(15, H - 62, 180, 50), 'btn_Aceptar', ok, 'Aceptar') + imgBtn(L(205, H - 62, 180, 50), 'btn_Cancelar', 'close', 'Cancelar');
+  return win(W, H, h, { label: title, cls: 'rform' });
+}
+
+/** Confirmación como dataentry.confirmation (400 x 270). */
+function confirmWin(title, msg, ok = 'confirm-ok') {
+  const L = loc(400, 270);
+  const h = closeBtn(L(363, 5, 30, 30)) + text(esc(title), L(0, 36, 400, 36), 20, 'justify-content:center') +
+    text(esc(msg), L(20, 72, 360, 128), 17, 'justify-content:center;text-align:center;white-space:normal') +
+    imgBtn(L(15, 210, 180, 50), 'btn_Aceptar', ok, 'Aceptar') + imgBtn(L(205, 210, 180, 50), 'btn_Cancelar', 'close', 'Cancelar');
+  return win(400, 270, h, { bg: 'bgConfirmation', label: title || 'Confirmación' });
+}
+
+function listWin({ W, H, bg, x, y, label, input, filterLabel = 'Filtros de busqueda', head = '', list, listBox, ok, cancel }) {
+  const L = loc(W, H);
+  return win(W, H,
+    closeBtn(L(W - 37, 5, 30, 30)) + text(filterLabel, L(10, 25, 200, 60), 15, 'font-weight:700') +
+    `<div class="rfield big" style="${L(10, 68, 300, 40)}"><input id="lq" value="${esc(input)}" autocomplete="off" aria-label="Filtro"></div>` +
+    head + `<div class="rlist" id="lList" style="${L(...listBox)}">${list}</div>` +
+    imgBtn(L(...ok), 'btn_Aceptar', 'ok', 'Aceptar') + imgBtn(L(...cancel), 'btn_Cancelar', 'close', 'Cancelar'),
+    { bg, x, y, label });
+}
+
+/* ---------- Ventanas ---------- */
+const filtered = d => {
+  const q = norm(d.q || '');
+  if (d.k === 'productos') return CATALOG.filter(p => !q || norm(p[1]).includes(q) || p[0].startsWith(q));
+  if (d.k === 'clientes') return customers.filter(c => !q || norm(c.name).includes(q) || c.doc.includes(q));
+  return MENU_OPTIONS.filter(o => !q || norm(o).includes(q));
+};
+function listRows(d) {
+  d.list = filtered(d);
+  if (d.idx >= d.list.length) d.idx = 0;
+  if (!d.list.length) return '<div class="rempty">Sin resultados.</div>';
+  return d.list.map((x, i) => {
+    const cells = d.k === 'productos' ? [x[0], esc(x[1]), x[2].toFixed(1)] : d.k === 'clientes' ? [x.doc, esc(x.name)] : [esc(x)];
+    return `<div class="lrow ${d.k}${i === d.idx ? ' on' : ''}" data-act="pick" data-i="${i}">${cells.map(c => `<span>${c}</span>`).join('')}</div>`;
+  }).join('');
 }
 
 const VIEWS = {
-  cantidad: () => frame([330, 40, 340, 520], 'Cantidad', keypad(selItem() ? selItem().name : ''), false, 'hl'),
-  descuento: () => frame([330, 120, 340, 280], 'Descuento',
-    '<label for="dVal">Valor</label><input id="dVal" value="10.0" inputmode="decimal">' +
-    '<label for="dTipo">Tipo de descuento</label><select id="dTipo"><option value="pct">Descuento Porcentual</option><option value="fijo">Descuento Monto Fijo</option></select>' +
-    '<div class="dlg-msg err" id="dErr"></div>', null, 'hl'),
-  precio: () => frame([300, 110, 340, 330], 'Cambio de precio',
-    `<label for="pMonto">Monto Modificado $</label><input id="pMonto" inputmode="decimal" placeholder="${selItem() ? selItem().price.toFixed(2) : ''}">` +
-    '<label for="pTipo">Tipo de Ajuste</label><select id="pTipo"><option value="rec">Recargo</option><option value="desc">Descuento</option></select>' +
-    '<label for="pPct">Porcentaje %</label><input id="pPct" inputmode="decimal"><div class="dlg-msg err" id="pErr"></div>', null, 'hl'),
-  confirm: d => frame([310, 190, 380, 210], '', `<div class="dlg-msg pad">${esc(d.msg)}</div>`, okCancel('confirm-ok')),
-  aviso: d => frame([290, 170, 420, 250], '', `<div class="dlg-msg err pad">${esc(d.msg)}</div>`,
-    `<span class="abtn b-blue btn-sm" data-act="aviso-go" role="button">${I.arrow}Ir al descuento</span><span class="abtn b-green" data-act="close" role="button">${I.check}Aceptar</span>`),
-  productos: d => frame([40, 30, 760, 540], '',
-    `<label for="pfQ" class="pf-label">Filtros de busqueda</label><input id="pfQ" class="pf-q" autocomplete="off" value="${esc(d.q || '')}"><div class="plist" id="pfList"></div>`),
-  pago: () => pagoScreen(),
-  pagoMonto: d => pagoScreen() + frame([330, 170, 340, 230], d.medio,
-    `<label for="pmV">Importe</label><input id="pmV" inputmode="decimal" value="${d.def.toFixed(2)}"><div class="dlg-msg err" id="pmErr"></div>`, okCancel('pm-ok', 'close'), 'hl'),
-  imprimir: () => pagoScreen() + frame([330, 190, 340, 200], '', '<div class="dlg-msg pad">¿Desea imprimir el comprobante?</div>',
-    `<span class="abtn b-green" data-act="fin" role="button">${I.check}Sí</span><span class="abtn b-red" data-act="fin" role="button">${I.cancel}No</span>`)
+  cantidad: () => form('Cantidad', [{ id: 'fQty', label: 'Cantidad', value: fmtQty(selItem().qty), num: true }]),
+  descuento: () => form('Descuento', [{ id: 'fVal', label: 'Valor', value: '10.0', num: true }, { id: 'fTipo', label: 'Tipo de descuento', options: ['Descuento Porcentual', 'Descuento Monto Fijo'] }]),
+  precio: () => form('Cambio de precio', [{ id: 'fMonto', label: 'Monto Modificado $', value: '', num: true }, { id: 'fAjuste', label: 'Tipo de Ajuste', options: ['Recargo', 'Descuento'] }, { id: 'fPct', label: 'Porcentaje %', value: '', num: true }]),
+  comprobante: () => form('', [{ id: 'fTipoFac', label: 'Tipo Factura', options: ['Factura B', 'Factura A'], value: S.comprobante || 'Factura B' }]),
+  factcli: () => form('', [{ id: 'fTipoDoc', label: 'Tipo Documento', options: ['CUIT', 'CUIL', 'DNI'] }, { id: 'fNroDoc', label: 'Numero documento', value: '', num: true }, { id: 'fIva', label: 'Condicion IVA', options: ['Ninguno', 'Consumidor Final', 'Responsable Inscripto', 'Monotributo', 'Exento'] }]),
+  alta: () => form('Dar de alta cliente', [
+    { id: 'aTipo', label: 'Tipo documento', options: ['CUIT', 'CUIL', 'DNI'] }, { id: 'aNro', label: 'Nro', value: '', num: true },
+    { id: 'aIva', label: 'Condicion IVA', options: ['Consumidor Final', 'Responsable Inscripto', 'Monotributo', 'Exento'] },
+    { id: 'aNombre', label: 'Nombre / Razon Social', value: '' }, { id: 'aApellido', label: 'Apellido', value: '' },
+    { id: 'aEmail', label: 'Email', value: '' }, { id: 'aTel', label: 'Telefono', value: '' }, { id: 'aDir', label: 'Direccion', value: '' },
+    { id: 'aSuc', label: 'Sucursal', value: '' }]),
+  pagoMonto: d => form(d.medio, [{ id: 'fImporte', label: 'Importe', value: d.def.toFixed(2), num: true }]),
+  confirm: d => confirmWin(d.title || '', d.msg),
+  aviso: d => confirmWin('Quitar renglón', d.msg, 'aviso-go'),
+  info: d => confirmWin(d.title, d.msg, 'close'),
+  productos: d => listWin({ W: 1000, H: 550, bg: 'bg_item_search', x: 20, y: 52, label: 'Productos', input: d.q, list: listRows(d), listBox: [12, 131, 755, 342], ok: [265, 490, 180, 50], cancel: [455, 490, 180, 50] }),
+  clientes: d => {
+    const L = loc(580, 450);
+    const head = text('Dni/Cuit', L(12, 123, 118, 32), 12, 'font-weight:700;justify-content:center') + text('Nombre', L(131, 123, 430, 32), 12, 'font-weight:700;justify-content:center');
+    return listWin({ W: 580, H: 450, bg: 'bg_customer_search', label: 'Buscar cliente', input: d.q, head, list: listRows(d), listBox: [18, 156, 542, 155], ok: [105, 361, 180, 50], cancel: [295, 361, 180, 50] });
+  },
+  menu: d => {
+    const L = loc(680, 550);
+    const head = text('Seleccione', L(24, 123, 630, 32), 12, 'font-weight:700;justify-content:center');
+    return listWin({ W: 680, H: 550, bg: 'bg_generic_search', x: 180, y: 52, label: 'Menú', input: d.q, head, list: listRows(d), listBox: [24, 156, 630, 255], ok: [155, 461, 180, 50], cancel: [345, 461, 180, 50] });
+  }
 };
-const FIRST_FIELD = { descuento: '#dVal', precio: '#pMonto', pagoMonto: '#pmV' };
 
 export function renderDlg() {
   const d = S.dlg;
   dlgEl.hidden = !d;
   dlgEl.innerHTML = d ? VIEWS[d.k](d) : '';
   if (!d) return;
-  if (d.k === 'productos') {
-    renderProductList();
-    const q = $('#pfQ'); q.focus(); q.setSelectionRange(q.value.length, q.value.length);
-  }
-  const f = FIRST_FIELD[d.k] && $(FIRST_FIELD[d.k]);
-  if (f) { f.focus(); f.select(); }
+  const first = $('#lq', dlgEl) || $('.rwin input, .rwin select', dlgEl) || $('.rwin [data-act="confirm-ok"], .rwin [data-act="aviso-go"], .rwin [data-act="close"]', dlgEl);
+  if (first) { first.focus(); if (first.select) first.select(); }
 }
 
-function renderProductList() {
+function refreshList() {
   const d = S.dlg;
-  const q = norm(d.q || '');
-  d.list = CATALOG.filter(p => !q || norm(p[1]).includes(q) || p[0].startsWith(q));
-  if (d.idx >= d.list.length) d.idx = 0;
-  $('#pfList').innerHTML = d.list.length
-    ? d.list.map((p, i) => `<div class="prow${i === d.idx ? ' on' : ''}" data-act="prow" data-i="${i}"><span>${p[0]}</span><span>${esc(p[1])}</span><span style="text-align:right">${p[2].toFixed(1)}</span></div>`).join('')
-    : '<div class="dlg-msg pad">No hay artículos con ese nombre.</div>';
+  $('#lList').innerHTML = listRows(d);
+  const on = $('#lList .on');
+  if (on) on.scrollIntoView({ block: 'nearest' });
 }
 
-/* ---------- Respuestas a los botones de cada ventana ---------- */
-const num = id => parseFloat(($(id).value || '').replace(',', '.'));
+/* ---------- Acciones ---------- */
+const val = id => ($(id) ? $(id).value.trim() : '');
+const num = id => parseFloat(val(id).replace(',', '.'));
+const fail = msg => { const e = $('#dErr'); if (e) e.textContent = msg; };
 const done = () => { closeDlg(); refresh(); };
-const backToPago = () => openDlg({ k: 'pago' });
+
+function finishSale(printed) {
+  const vuelto = paid() - totals().total;
+  clearSale();
+  addLog(`Venta registrada${printed ? ' e impresa' : ''}${vuelto > 0 ? ` · Vuelto ${money(vuelto)}` : ''}. La Caja vuelve a cero.`);
+  done();
+}
 
 const HANDLERS = {
-  cantidad(a, el, d) {
-    const r = selItem(), screen = $('#kpS'), show = () => { screen.textContent = d.v || '0'; };
-    if (a === 'kp') {
-      const n = el.dataset.n;
-      if (n === '.' && (d.v || '').includes('.')) return;
-      d.v = ((d.v || '') + n).replace(/^0(?=\d)/, '').slice(0, 7); show();
-    } else if (a === 'kp-back') { d.v = (d.v || '').slice(0, -1); show(); }
-    else if (a === 'kp-inc' || a === 'kp-dec') { d.v = String(Math.max(0, (parseFloat(d.v) || 0) + (a === 'kp-inc' ? 1 : -1))); show(); }
-    else if (a === 'ok') {
-      const q = parseFloat(d.v);
-      if (!(q > 0)) { d.v = ''; screen.textContent = 'Ingresá un número'; return; }
-      r.qty = q;
-      addLog(`${r.name}: cantidad ${fmtQty(q)} · Total ${money(totals().total)}`);
-      done();
-    }
+  cantidad() {
+    const q = num('#fQty'), r = selItem();
+    if (!(q > 0)) return fail('Ingresá un número mayor que cero.');
+    r.qty = q; addLog(`${r.name}: cantidad ${fmtQty(q)} · Total ${money(totals().total)}`); done();
   },
-  descuento(a) {
-    if (a !== 'ok') return;
-    const r = selItem(), v = num('#dVal'), pct = $('#dTipo').value === 'pct', line = r.qty * r.price;
-    if (!(v > 0)) { $('#dErr').textContent = 'Escribí un valor mayor que cero.'; return; }
+  descuento() {
+    const r = selItem(), v = num('#fVal'), pct = val('#fTipo').includes('Porcentual'), line = r.qty * r.price;
+    if (!(v > 0)) return fail('Escribí un valor mayor que cero.');
     const amount = Math.round((pct ? line * v / 100 : v) * 100) / 100;
-    if (amount > line) { $('#dErr').textContent = 'El descuento supera el importe del artículo.'; return; }
+    if (amount > line) return fail('El descuento supera el importe del artículo.');
     const at = S.rows.indexOf(r) + 1;
-    S.rows.splice(at, 0, { t: 'd', id: nextId(), of: r.id, amount, name: (pct ? `Desc %${v.toFixed(1)} a ` : `Desc $${v.toFixed(2)} a `) + r.name });
-    S.sel = at;
-    addLog(`Descuento de ${money(amount)} · Total ${money(totals().total)}`);
-    done();
+    S.rows.splice(at, 0, { t: 'd', id: nextId(), of: r.id, amount, name: `Desc ${pct ? '%' + v.toFixed(1) : '$' + v.toFixed(2)} Art. ${r.name}` });
+    S.sel = at; addLog(`Descuento de ${money(amount)} · Total ${money(totals().total)}`); done();
   },
-  precio(a) {
-    if (a !== 'ok') return;
-    const r = selItem(), m = num('#pMonto'), p = num('#pPct');
+  precio() {
+    const r = selItem(), m = num('#fMonto'), p = num('#fPct');
     if (m > 0) r.price = m;
-    else if (p > 0) r.price = Math.round(r.price * ($('#pTipo').value === 'rec' ? 1 + p / 100 : 1 - p / 100) * 100) / 100;
-    else { $('#pErr').textContent = 'Escribí un monto o un porcentaje.'; return; }
-    addLog(`Nuevo precio de ${r.name}: ${money(r.price)} · Total ${money(totals().total)}`);
-    done();
+    else if (p > 0) r.price = Math.round(r.price * (val('#fAjuste') === 'Recargo' ? 1 + p / 100 : 1 - p / 100) * 100) / 100;
+    else return fail('Escribí un monto o un porcentaje.');
+    addLog(`Nuevo precio de ${r.name}: ${money(r.price)} · Total ${money(totals().total)}`); done();
   },
-  confirm(a, el, d) {
-    if (a !== 'confirm-ok') return;
-    if (d.run === 'limpiar') { S.pays = []; addLog('Se limpiaron los pagos.'); backToPago(); renderInfo(); return; }
+  comprobante() {
+    S.comprobante = val('#fTipoFac');
+    addLog(`Comprobante: ${S.comprobante}. El título cambió a VENTA AFIP y la factura la emite el sistema al cobrar.`); done();
+  },
+  factcli() {
+    const nro = val('#fNroDoc');
+    if (!/^\d{7,11}$/.test(nro)) return fail('Escribí un número de documento válido.');
+    S.fact = { doc: nro, name: `${val('#fTipoDoc')} ${nro}`, iva: val('#fIva') };
+    addLog('Cliente de facturación cargado.'); done();
+  },
+  alta() {
+    const nro = val('#aNro'), nombre = val('#aNombre');
+    if (!/^\d{7,11}$/.test(nro)) return fail('Completá el número de documento.');
+    if (!nombre) return fail('Completá el nombre o la razón social.');
+    customers.unshift({ doc: nro, name: [nombre, val('#aApellido')].filter(Boolean).join(' '), iva: val('#aIva'), balance: 0 });
+    addLog('Cliente guardado. Buscalo con el primer ícono del panel Cliente.'); done();
+  },
+  pagoMonto(d) {
+    const v = num('#fImporte');
+    if (!(v > 0)) return fail('Escribí un importe mayor que cero.');
+    S.pays.push({ medio: d.medio, monto: v });
+    addLog(`${d.medio}: ${money(v)} · Saldo ${money(Math.max(0, totals().total - paid()))}`); done();
+  },
+  confirm(d) {
     if (d.run === 'quitar') {
       const x = S.rows.splice(S.sel, 1)[0];
       S.sel = Math.max(0, Math.min(S.sel, S.rows.length - 1));
       addLog(`${x.t === 'd' ? 'Se quitó el descuento' : `Se quitó ${x.name}`} · Total ${money(totals().total)}`);
-    }
-    if (d.run === 'cancelar') { clearSale(); addLog('Venta cancelada: carrito, cliente y factura vacíos.'); }
+    } else if (d.run === 'cancelar') { clearSale(); addLog('Venta cancelada: carrito, cliente y factura vacíos.'); }
+    else if (d.run === 'limpiar') { S.pays = []; addLog('Se limpiaron los pagos.'); }
+    else if (d.run === 'imprimir') return finishSale(true);
     done();
   },
-  aviso(a) {
-    if (a !== 'aviso-go') return;
+  aviso() {
     const x = S.rows[S.sel], di = S.rows.findIndex(z => z.t === 'd' && z.of === x.id);
     if (di >= 0) S.sel = di;
-    addLog('Seleccionado el renglón del descuento. Ahora sí podés quitarlo.');
-    done();
+    addLog('Seleccionado el renglón del descuento. Ahora sí podés quitarlo.'); done();
   },
-  productos(a, el, d) {
-    if (a === 'prow') { d.idx = +el.dataset.i; renderProductList(); return; }
-    if (a === 'ok') { const p = d.list && d.list[d.idx]; if (!p) return; addItem(p); done(); }
+  productos(d) {
+    const p = d.list[d.idx]; if (!p) return;
+    S.lastQuery = d.q || '';
+    closeDlg(); addItem(p); refresh();
   },
-  pago(a, el, d) {
-    const t = totals().total, p = paid();
-    if (a === 'medio') { openDlg({ k: 'pagoMonto', medio: MEDIOS[+el.dataset.m][0], def: Math.max(0, t - p) }); return; }
-    if (a === 'pm-ok') {
-      const v = num('#pmV');
-      if (!(v > 0)) { $('#pmErr').textContent = 'Escribí un importe mayor que cero.'; return; }
-      S.pays.push({ medio: d.medio, monto: v });
-      addLog(`${d.medio}: ${money(v)} · Saldo ${money(Math.max(0, t - p - v))}`);
-      backToPago(); renderInfo(); return;
-    }
-    if (a === 'limpiar') { if (S.pays.length) openDlg({ k: 'confirm', msg: '¿Borrar todos los pagos de la lista?', run: 'limpiar' }); return; }
-    if (a === 'volver') { S.pays = []; closeDlg(); addLog('Volvió a la venta sin cobrar.'); renderInfo(); return; }
-    if (a === 'pd-pagar') {
-      if (p < t) { addLog(`Todavía falta cobrar ${money(t - p)}.`); renderInfo(); return; }
-      openDlg({ k: 'imprimir' }); return;
-    }
-    if (a === 'fin') {
-      const vuelto = p - t;
-      clearSale();
-      addLog(`Venta registrada${vuelto > 0 ? ` · Vuelto ${money(vuelto)}` : ''}. La caja vuelve a cero.`);
-      done();
-    }
+  clientes(d) {
+    const c = d.list[d.idx]; if (!c) return;
+    S.client = c; addLog(`Cliente asignado: ${c.name}.`); done();
+  },
+  menu(d) {
+    const o = d.list[d.idx]; if (!o) return;
+    if (o.startsWith('Agregar cliente')) { openDlg({ k: 'alta' }); return; }
+    addLog(`En la Caja real, "${o}" abre esa función. Esta práctica no la simula.`); done();
   }
 };
-HANDLERS.pagoMonto = HANDLERS.pago;
-HANDLERS.imprimir = HANDLERS.pago;
 
-/** Cerrar (✕, Cancelar o Escape): las ventanas que salen de Pago detallado vuelven a él. */
+/** Cerrar (✕, Cancelar o Escape). Imprimir: Cancelar cierra la venta sin imprimir. */
 function closeCurrent() {
   const d = S.dlg;
-  if (d.k === 'pagoMonto' || (d.k === 'confirm' && d.run === 'limpiar')) backToPago();
-  else if (d.k === 'pago' || d.k === 'imprimir') HANDLERS.pago('volver', null, d);
-  else closeDlg();
+  if (d && d.k === 'confirm' && d.run === 'imprimir') { finishSale(false); return; }
+  closeDlg();
 }
 
 export function dlgAction(a, el) {
   const d = S.dlg;
   if (!d) return;
   if (a === 'close') { closeCurrent(); return; }
-  const h = HANDLERS[d.k];
-  if (h) h(a, el, d);
+  if (a === 'pick') { d.idx = +el.dataset.i; refreshList(); return; }
+  if (a === 'ok' || a === 'confirm-ok' || a === 'aviso-go') { const h = HANDLERS[d.k]; if (h) h(d); }
 }
 
-/** Teclas 1 a 6 en Pago detallado. */
-export function chooseMedio(i) {
-  if (S.dlg && S.dlg.k === 'pago') dlgAction('medio', { dataset: { m: String(i) } });
+/* ---------- Pantalla de cobro ---------- */
+export function tenderAction(a, el) {
+  if (S.dlg) return;
+  const t = totals().total, p = paid();
+  if (a === 'medio') { openDlg({ k: 'pagoMonto', medio: MEDIO_NAMES[+el.dataset.m], def: Math.max(0, t - p) }); return; }
+  if (a === 'mas-opciones') { addLog('Más opciones abre otros medios de pago configurados. Esta práctica no los simula.'); refresh(); return; }
+  if (a === 'limpiar') { if (S.pays.length) openDlg({ k: 'confirm', title: 'Limpiar', msg: '¿Desea borrar todos los pagos de la lista?', run: 'limpiar' }); return; }
+  if (a === 'volver') { S.pays = []; S.screen = 'venta'; addLog('Volviste a la venta sin cobrar.'); refresh(); return; }
+  if (a === 'cancelar-venta') { openDlg({ k: 'confirm', title: 'Cancelar', msg: '¿Desea cancelar la transacción?', run: 'cancelar' }); return; }
+  if (a === 'pd-pagar') {
+    if (p < t) { addLog(`Todavía falta cobrar ${money(t - p)}.`); refresh(); return; }
+    openDlg({ k: 'confirm', title: 'Imprimir', msg: '¿Desea imprimir el comprobante?', run: 'imprimir' });
+  }
 }
 
 export function initDialogs() {
@@ -224,27 +254,23 @@ export function initDialogs() {
     if (el) dlgAction(el.dataset.act, el);
   });
   dlgEl.addEventListener('dblclick', e => {
-    const el = e.target.closest('.prow');
-    if (el && S.dlg && S.dlg.k === 'productos') { S.dlg.idx = +el.dataset.i; dlgAction('ok', el); }
+    const el = e.target.closest('.lrow');
+    if (el && S.dlg) { S.dlg.idx = +el.dataset.i; dlgAction('ok', el); }
   });
   dlgEl.addEventListener('input', e => {
-    if (e.target.id === 'pfQ' && S.dlg) { S.dlg.q = e.target.value; S.dlg.idx = 0; renderProductList(); }
+    if (e.target.id === 'lq' && S.dlg) { S.dlg.q = e.target.value; S.dlg.idx = 0; refreshList(); }
   });
   dlgEl.addEventListener('keydown', e => {
     const d = S.dlg;
     if (!d) return;
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeCurrent(); return; }
-    if (d.k === 'productos' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+    if (d.list && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
       e.preventDefault();
-      d.idx = Math.max(0, Math.min((d.list || []).length - 1, d.idx + (e.key === 'ArrowDown' ? 1 : -1)));
-      renderProductList();
-      const on = $('#pfList .on'); if (on) on.scrollIntoView({ block: 'nearest' });
+      d.idx = Math.max(0, Math.min(d.list.length - 1, d.idx + (e.key === 'ArrowDown' ? 1 : -1)));
+      refreshList();
       return;
     }
-    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
-      e.preventDefault();
-      if (d.k === 'pagoMonto') dlgAction('pm-ok');
-      else if (['descuento', 'precio', 'productos'].includes(d.k)) dlgAction('ok');
-    }
+    if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); dlgAction('ok'); }
+    e.stopPropagation();
   });
 }

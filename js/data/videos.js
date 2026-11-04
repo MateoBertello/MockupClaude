@@ -232,11 +232,98 @@ export const VIDEOS = {
   }
 };
 
+VIDEOS['07'] = {
+  file: '07-agregar-cliente', title: 'Agregar un cliente', dur: 48.5,
+  category: 'Clientes', tint: 'var(--t-rose)',
+  desc: 'Dá de alta un cliente nuevo sin salir de la Caja.',
+  tip: 'El atajo CTRL+A abre la ficha directo, sin pasar por el menú.',
+  practice: 'menu',
+  chapters: [
+    { t: 0, title: 'Agregar cliente', steps: [
+      [4.5, 'El cliente del local es el que lleva la cuenta corriente y los puntos de fidelización.', 'cliente'],
+      [10.5, 'Abrí el menú de tres rayas y escribí "agregar" en el filtro. También podés usar CTRL+A.', 'menu'],
+      [19.5, 'Elegí Agregar cliente y presioná Aceptar. Se abre la ficha del cliente.', 'menu'],
+      [27, 'Completá tipo y número de documento y la condición de IVA.', null],
+      [33, 'Después el nombre y el apellido, los datos de contacto, la dirección y la sucursal.', null],
+      [42, 'Aceptar guarda el cliente nuevo. Cancelar cierra la ficha sin guardar.', null]
+    ] }
+  ],
+  cues: [
+    [0, 'Un cliente nuevo se puede dar de alta sin salir de la *Caja*.'],
+    [4.5, 'Es el cliente del local.'],
+    [6, 'Con él se llevan la cuenta corriente y los puntos de fidelización.'],
+    [10.5, 'Abra el menú de tres rayas.'],
+    [13.5, 'Escriba agregar en el filtro. También existe el atajo Control A.'],
+    [19.5, 'Elija *Agregar cliente* y presione *Aceptar*. Se abre la ficha del cliente.'],
+    [27, 'Complete el tipo de documento y el número. Después elija la condición de IVA.'],
+    [33, 'Siguen el nombre y el apellido.'],
+    [36, 'Luego los datos de contacto y la dirección.'],
+    [39, 'Al final la sucursal.'],
+    [42, '*Aceptar* guarda el cliente nuevo.'],
+    [45, '*Cancelar* cierra la ficha sin guardar.']
+  ]
+};
+
+VIDEOS['08'] = {
+  file: '08-cliente-factura', title: 'Cliente y tipo de comprobante', dur: 109.4,
+  category: 'Clientes y facturación', tint: 'var(--t-blue)',
+  desc: 'Asigná el cliente del local, elegí el comprobante y cargá a quién se factura.',
+  tip: 'Si el cliente del local es el mismo al que facturás, la flecha » del panel Cliente lo copia en un toque.',
+  practice: 'factura',
+  chapters: [
+    { t: 0, title: 'El título de la venta', steps: [
+      [4.5, 'Mirá el título: FAC. ELECTRONICA MANUAL significa que la factura se hace a mano en la página de ARCA.', 'titulo'],
+      [15, 'El cliente y la factura se eligen en los dos paneles de abajo.', 'cliente']
+    ] },
+    { t: 19.5, title: 'Cliente del local', steps: [
+      [19.5, 'El panel Cliente es el cliente del local: cuenta corriente y puntos de fidelización.', 'cliente'],
+      [28.5, 'Su primer ícono abre la lista de clientes. Buscá por nombre o por documento.', 'cliente'],
+      [36, 'Elegí el cliente y presioná Aceptar. El panel muestra sus datos y el Balance de su cuenta.', 'cliente']
+    ] },
+    { t: 43.5, title: 'Cliente de facturación', steps: [
+      [46.5, 'El primer ícono del panel Factura abre el tipo de comprobante. Por ejemplo, Factura B.', 'factura'],
+      [54, 'El título cambia a VENTA AFIP y Factura Electronica: el sistema emite la factura al cobrar.', 'titulo'],
+      [63, 'El panel avisa que falta el cliente de facturación. El segundo ícono lo carga con tipo y número de documento y condición de IVA.', 'factura'],
+      [85.5, 'Lo más rápido: la flecha » del panel Cliente pasa el cliente de la venta a la factura.', 'cliente'],
+      [96, 'Al pagar, el panel Factura sigue mostrando al cliente: se cobra y se factura a su nombre.', 'pagar']
+    ] }
+  ],
+  cues: [
+    [0, 'En este video verá cómo trabajar con el cliente y la factura.'],
+    [4.5, 'Mire siempre el título de arriba. Ahora dice *Factura electrónica manual*.'],
+    [10.5, 'Significa que esta venta se factura a mano en la página de ARCA.'],
+    [15, 'El cliente y la factura se eligen en los dos paneles de abajo.'],
+    [19.5, 'El panel *Cliente* es el cliente del local.'],
+    [24, 'Es el que se usa para la cuenta corriente y para sumar puntos de fidelización.'],
+    [28.5, 'Su primer ícono abre la lista de clientes.'],
+    [31.5, 'Busque por nombre o por documento.'],
+    [36, 'Elija el cliente y presione *Aceptar*.'],
+    [39, 'El panel muestra sus datos y el *Balance* de su cuenta.'],
+    [43.5, 'Ahora vamos a la factura.'],
+    [46.5, 'El primer ícono del panel *Factura* abre el tipo de comprobante.'],
+    [49.5, 'En este ejemplo elegimos *Factura B* y aceptamos.'],
+    [54, 'Mire cómo cambió el título.'],
+    [57, 'Ahora dice *VENTA AFIP* y *Factura Electronica*.'],
+    [60, 'Esta factura la emite el sistema al cobrar.'],
+    [63, 'El panel avisa que todavía falta el cliente de facturación.'],
+    [66, 'Puede cargar el CUIT o el CUIL que le da la persona.'],
+    [70.5, 'Use el segundo ícono del panel.'],
+    [73.5, 'Elija el tipo de documento. Escriba el número.'],
+    [79.5, 'Después elija la condición de IVA.'],
+    [82.5, 'Esta vez cerramos con *Cancelar*.'],
+    [85.5, 'La forma más rápida es usar el cliente que ya está en la venta.'],
+    [90, 'Con la flecha del panel *Cliente* se pasa a la factura.'],
+    [96, 'Al presionar *Pagar* el panel *Factura* sigue mostrando al cliente.'],
+    [100.5, 'Así se cobra y se factura a nombre de esa persona.'],
+    [103.5, 'En este ejemplo no cobramos. *Volver* regresa a la venta.']
+  ]
+};
+
 export const VIDEO_IDS = Object.keys(VIDEOS);
 export const TOTAL_DUR = VIDEO_IDS.reduce((a, id) => a + VIDEOS[id].dur, 0);
 
 export const UPCOMING = [
-  '07 · Agregar un cliente', '08 · Cliente y tipo de comprobante', '09 · Arqueo y nota de crédito',
+  '09 · Arqueo y nota de crédito',
   '10 · Ingresos y retiros de dinero', '11 · Declarar un gasto', '12 · Cobro de cuenta corriente',
   '13 · Opciones durante la venta', '14 · Reimprimir comprobantes', '15 · Recargar artículos y clientes',
   '16 · Arqueo de caja'

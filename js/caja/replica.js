@@ -1,98 +1,190 @@
-// Réplica de la pantalla de venta: dibuja el lienzo y recibe los toques del usuario.
+// Réplica de la Caja con su piel real (assets/caja, tomada de light_small).
+// Las coordenadas salen de designx/salexDesign.xml (venta) y tenderxDesign.xml (cobro): pantalla de 1040 x 655.
 
-import { $, $$, esc, money, fmtQty, box, at, canHover } from '../utils.js';
-import { I, OWL, BARCODE } from '../icons.js';
+import { $, $$, esc, money, fmtQty, box, at, fs, canHover } from '../utils.js';
+import { I } from '../icons.js';
 import { SPOTS, SPOT_IDS } from '../data/spots.js';
-import { CATALOG } from '../data/content.js';
-import { S, totals, addLog } from '../state.js';
-import { act, addItem } from './actions.js';
+import { S, totals, paid, keyState } from '../state.js';
+import { act, codeEntered, practiceKey } from './actions.js';
+import { comboFromEvent } from '../keys.js';
+import { tenderAction, MEDIO_NAMES } from './dialogs.js';
 import { pin, renderInfo } from './inspector.js';
 import { openCheat } from '../cheatsheet.js';
 
 const pos = $('#pos');
 const base = $('#rp-base');
 const dotsEl = $('#rp-dots');
+const A = p => `assets/caja/${p}`;
 
-function spot(id, style, cls, inner = '') {
-  return `<div class="sp ${cls || ''}${S.pinned === id ? ' is-pin' : ''}" data-spot="${id}" role="button" tabindex="0" aria-label="${esc(SPOTS[id].label)}" style="${style}">${inner}</div>`;
+/* ---------- Piezas ---------- */
+const img = (p, b) => `<img class="ri" src="${A(p)}" alt="" draggable="false" style="${box(...b)}">`;
+function lbl(text, b, o = {}) {
+  const style = [box(...b), fs(o.f || 14), o.bold ? 'font-weight:700' : '', o.color ? `color:${o.color}` : '', `justify-content:${o.align || 'flex-start'}`].filter(Boolean).join(';');
+  return `<div class="rl${o.cls ? ' ' + o.cls : ''}" style="${style}">${text}</div>`;
+}
+const pinCls = id => (S.pinned === id ? ' is-pin' : '');
+const spotAttrs = id => `data-spot="${id}" role="button" tabindex="0" aria-label="${esc(SPOTS[id].label)}"`;
+/** Botón con su imagen normal y la presionada (se ve al hacer clic). */
+const btn = (id, name, b) => `<div class="sp rb${pinCls(id)}" ${spotAttrs(id)} style="${box(...b)}"><img src="${A('btn/' + name + '.png')}" alt="" draggable="false"><img class="dn" src="${A('btn/' + name + (/^(btnMenu|Client|client-copy|FElectronica)/.test(name) ? '_press' : '_Press') + '.png')}" alt="" draggable="false"></div>`;
+/** Botón de la pantalla de cobro (no es un punto del mapa: responde con data-act). */
+const actBtn = (actName, name, b, extra = '') => `<div class="rb act" data-act="${actName}" ${extra} role="button" tabindex="0" style="${box(...b)}"><img src="${A('btn/' + name + '.png')}" alt="" draggable="false"><img class="dn" src="${A('btn/' + name + '_Press.png')}" alt="" draggable="false"></div>`;
+/** Zona sensible transparente sobre una parte de la pantalla. */
+const zone = (id, b, inner = '') => `<div class="sp zone${pinCls(id)}" ${spotAttrs(id)} style="${box(...b)}">${inner}</div>`;
+
+const GRAY = '#8C8C8C';
+
+function titleLines() {
+  if (!S.rows.length && S.screen === 'venta') return ['', ''];
+  return S.comprobante
+    ? [`VENTA AFIP / ${S.comprobante.replace('Factura ', 'FAC ')}`, 'Factura Electronica']
+    : ['VENTA FAC. ELECTRONICA MANUAL', 'ESTE COMPROBANTE NO ESTA APROBADO POR AFIP'];
 }
 
-function cartRows() {
-  const r = S.rows;
-  let h = '<div class="rp-row rp-head"><span>Cant.</span><span>Codigo</span><span>Descripcion</span><span>P. Unitario</span><span>P. Total</span><span></span></div>';
-  for (let i = 0; i < 9; i++) {
-    const x = r[i];
-    if (!x) { h += `<div class="rp-row${i === 0 && !r.length ? ' sel' : ''}">${'<span></span>'.repeat(6)}</div>`; continue; }
-    const d = x.t === 'd';
-    const unit = d ? -x.amount : x.price;
-    const total = d ? -x.amount : x.qty * x.price;
-    h += `<div class="rp-row data${i === S.sel ? ' sel' : ''}" data-row="${i}"><span class="num">${d ? '1' : fmtQty(x.qty)}</span><span>${esc(d ? 'Manual' : x.code)}</span><span${d ? ' class="dsc"' : ''}>${esc(x.name)}</span><span class="num">${unit.toFixed(1)}</span><span class="num">${total.toFixed(2)}</span><span></span></div>`;
+/* Paneles Cliente y Factura, comunes a la venta y al cobro. */
+function panels() {
+  let h = img('bg/ImgCustomer.png', [333, 504, 220, 90]) + img('bg/ImgCustomer.png', [563, 505, 220, 90]);
+  h += lbl('Cliente', [344, 515, 140, 20], { f: 18, bold: true });
+  h += lbl('Factura', [572, 515, 140, 20], { f: 18, bold: true });
+  const c = S.client;
+  if (c) {
+    h += lbl(esc(c.name), [344, 534, 201, 16]);
+    h += lbl(`${c.doc} [${esc(c.iva)}]`, [344, 551, 201, 16]);
+    h += lbl(`Balance ${money(c.balance)}`, [344, 568, 201, 16]);
   }
+  const f = S.fact;
+  if (f) {
+    h += lbl(esc(f.name), [572, 535, 201, 16]);
+    h += lbl(`${f.doc} [${esc(f.iva)}]`, [572, 561, 201, 16]);
+  } else if (S.comprobante) {
+    h += lbl('CLIENTE FACTURACION', [572, 535, 201, 16]);
+    h += lbl('NO ESPECIFICADO', [572, 561, 201, 16]);
+  }
+  h += zone('cliente', [333, 504, 220, 90]) + zone('factura', [563, 505, 220, 90]);
+  h += btn('clienteBuscar', 'Client', [492, 511, 24, 24]) + btn('copiar', 'client-copy', [519, 511, 24, 24]);
+  h += btn('comprobante', 'FElectronica', [722, 511, 24, 24]) + btn('clienteFact', 'Client', [749, 511, 24, 24]);
+  return h;
+}
+
+function chrome() {
+  let h = img('bg/back.png', [0, 0, 1040, 655]);
+  h += btn('menu', 'Menu', [10, 6, 40, 40]);
+  h += lbl('cajero1', [60, 15, 130, 20], { f: 16 });
+  h += `<div class="ri" style="${box(984, 10, 34, 30)}">${I.wifi}</div>`;
+  h += img('bg/Logo_Buho.png', [10, 505, 90, 90]);
+  h += lbl('BuhoManager.com', [98, 550, 223, 30], { f: 24, bold: true, color: GRAY, align: 'flex-end' });
+  h += lbl('', [10, 600, 220, 14], { f: 12, color: GRAY, cls: 'rclock' });
+  return h;
+}
+
+/* ---------- Pantalla de venta ---------- */
+function cartTable() {
+  const r = S.rows, ROWS = 9;
+  let rows = '';
+  for (let i = 0; i < ROWS; i++) {
+    const x = r[i];
+    if (!x) { rows += `<div class="rrow${i === 0 && !r.length ? ' sel' : ''}">${'<span></span>'.repeat(5)}</div>`; continue; }
+    const d = x.t === 'd';
+    const unit = d ? money(-x.amount) : x.price.toFixed(2);
+    const total = d ? money(-x.amount) : (x.qty * x.price).toFixed(2);
+    rows += `<div class="rrow data${i === S.sel ? ' sel' : ''}" data-row="${i}"><span>${d ? '1' : fmtQty(x.qty)}</span><span>${esc(d ? 'Manual' : x.code)}</span><span class="${d ? 'dsc' : 'bold'}">${esc(x.name)}</span><span class="num">${unit}</span><span class="num">${total}</span></div>`;
+  }
+  return `<div class="sp rtbl${pinCls('carrito')}" ${spotAttrs('carrito')} style="${box(71, 170, 701, 261)}">
+    <div class="rtbl-rows">${rows}</div><div class="rscroll"><i></i><b></b><i class="dn"></i></div></div>`;
+}
+
+function saleScreen() {
+  const r = S.rows, t = totals(), cur = r[S.sel];
+  const [title1, title2] = titleLines();
+  let h = chrome();
+  h += img('bg/ImgTabla.png', [60, 65, 723, 430]);
+  h += img('bg/Menu_Lateral.png', [10, 85, 51, 389]);
+  h += lbl(title1, [60, 14, 723, 20], { f: 16, bold: true, align: 'center' });
+  h += lbl(title2, [60, 42, 723, 20], { f: 14, bold: true, align: 'center' });
+  // Último artículo
+  h += img('btn/Icon_Shoping.png', [71, 76, 50, 50]);
+  h += img('bg/ImgItem.png', [131, 76, 481, 50]) + img('bg/ImgItemPrice.png', [622, 76, 150, 50]);
+  const art = cur ? (cur.t === 'i' ? `${fmtQty(cur.qty)} x ${esc(cur.name)}` : esc(cur.name)) : '';
+  h += lbl(art, [141, 76, 466, 50], { f: 20, bold: true });
+  h += lbl(cur ? money(cur.t === 'i' ? cur.price : -cur.amount) : '', [627, 76, 140, 50], { f: 20, bold: true, align: 'center' });
+  h += zone('articulo', [71, 76, 701, 50]);
+  // Carrito
+  h += img('bg/ImgTitulo.png', [71, 136, 701, 45]);
+  [['Cant.', 41], ['Codigo', 125], ['P. Unitario', 563], ['P. Total', 648]].forEach(([tx, x]) => { h += lbl(tx, [x, 140, 110, 35], { f: 12, align: 'center' }); });
+  h += lbl('Descripcion', [270, 140, 230, 35], { f: 12, align: 'center' });
+  h += cartTable();
+  // Código y cantidad
+  h += img('bg/BarCode.png', [72, 434, 78, 50]) + img('bg/ImgEan.png', [160, 434, 552, 50]) + img('bg/ImgQuantity.png', [722, 434, 50, 50]);
+  h += lbl('1', [722, 434, 50, 50], { f: 24, bold: true, align: 'center' });
+  const code = S.mode === 'practice' ? `<input id="rpCode" aria-label="Código del artículo" inputmode="numeric" autocomplete="off" placeholder="Escribí un código y Enter" style="left:12.57%;top:0;width:78.86%;height:100%;${fs(24)}">` : '';
+  h += zone('codigo', [72, 434, 700, 50], code);
+  // Totales
+  h += img('bg/ImgSubTotal.png', [793, 65, 220, 90]) + img('bg/ImgSubTotal.png', [793, 165, 220, 90]) + img('bg/ImgTotal.png', [793, 265, 220, 90]);
+  if (r.length) {
+    h += lbl(money(t.sub), [793, 65, 220, 90], { f: 32, bold: true, color: GRAY, align: 'center' });
+    h += lbl(money(-t.dsc), [793, 165, 220, 90], { f: 32, bold: true, color: GRAY, align: 'center' });
+    h += lbl(money(t.total), [793, 265, 220, 90], { f: 32, bold: true, color: '#111', align: 'center' });
+  }
+  h += zone('totales', [793, 65, 220, 290]);
+  // Botones del renglón
+  ['mas', 'menos', 'cantidad', 'lapiz', 'tacho', 'etiqueta', 'arriba', 'abajo', 'stock'].forEach((id, i) => { h += btn(id, `btnMenu${i + 1}`, [11, 87 + i * 43, 49, 41]); });
+  // Acciones
+  h += btn('productos', 'Boton_Productos', [793, 425, 220, 50]);
+  h += btn('cancelar', 'Boton_Cancelar', [793, 485, 220, 50]);
+  h += btn('pagar', 'Boton_Pagar', [793, 545, 220, 50]);
+  // Pie
+  h += lbl('Cant. Items:', [61, 494, 100, 20], { f: 14, bold: true, align: 'center' });
+  h += lbl(String(r.filter(x => x.t === 'i').length), [150, 494, 40, 20], { f: 14, bold: true, align: 'center' });
+  if (S.client) h += lbl('Lista #1', [200, 494, 80, 20], { f: 12 });
+  h += panels();
+  return h;
+}
+
+/* ---------- Pantalla de cobro (Pago detallado) ---------- */
+function tenderScreen() {
+  const t = totals(), p = paid();
+  const saldo = Math.max(0, t.total - p), vuelto = Math.max(0, p - t.total);
+  const [title1] = titleLines();
+  let h = chrome();
+  h += lbl(title1, [300, 15, 520, 20], { f: 16, bold: true, align: 'center' });
+  MEDIO_NAMES.forEach((m, i) => { h += actBtn('medio', `btn_Pago-${i + 1}`, [15, 81 + i * 60, 280, 50], `data-m="${i}" aria-label="${m} (${i + 1})"`); });
+  h += actBtn('mas-opciones', 'btn_Pago-+', [15, 441, 280, 50], 'aria-label="Más opciones (M)"');
+  h += img('bg/ImgContainerTender.png', [304, 76, 479, 419]);
+  h += img('bg/ImgGridTitle.png', [314, 87, 459, 50]);
+  h += lbl('Medio de Pago', [314, 87, 345, 50], { f: 16, bold: true, align: 'center' });
+  h += lbl('Monto', [659, 87, 115, 50], { f: 16, bold: true, align: 'center' });
+  let rows = '';
+  for (let i = 0; i < 11; i++) {
+    const x = S.pays[i];
+    rows += `<div class="rrow pay${i === S.pays.length - 1 ? ' sel' : ''}"><span>${x ? esc(x.medio) : ''}</span><span class="num">${x ? money(x.monto) : ''}</span></div>`;
+  }
+  h += `<div class="rtbl rtbl-pay" style="${box(314, 147, 459, 338)}"><div class="rtbl-rows">${rows}</div></div>`;
+  [['Total', t.total, 77, 35], ['Saldo', saldo, 164, 32], ['Descuento', t.dsc, 251, 32], ['Vuelto', vuelto, 338, 35]].forEach(([name, v, y, f]) => {
+    h += img(name === 'Total' ? 'bg/ImgPagoTotal.png' : 'bg/ImgPagoSubTotal.png', [793, y, 220, 77]);
+    h += lbl(name, [793, y + 3, 220, 20], { f: 20, bold: true, color: GRAY, align: 'center' });
+    h += lbl(name === 'Descuento' && !v ? '' : v.toFixed(2), [793, y + 20, 220, 57], { f, bold: true, color: '#111', align: 'center' });
+  });
+  h += actBtn('limpiar', 'Boton_Limpiar', [793, 425, 220, 50], 'aria-label="Limpiar (L)"');
+  h += actBtn('volver', 'Boton_Volver', [793, 485, 220, 50], 'aria-label="Volver (V o Esc)"');
+  h += actBtn('pd-pagar', 'Boton_Pagar', [793, 545, 220, 50], `aria-label="Pagar (P)"${saldo > 0 ? ' data-off="1"' : ''}`);
+  h += panels();
   return h;
 }
 
 export function renderBase() {
-  const r = S.rows, t = totals(), cur = r[S.sel];
   const keepFocus = document.activeElement && document.activeElement.id === 'rpCode';
-  let h = '';
-
-  // Barra superior
-  h += spot('menu', box(12, 12, 34, 26), 'rp-tb', I.burger);
-  h += `<div class="abs" style="${at(58, 15)};font-size:1.5cqw">cajero1</div>`;
-  h += spot('titulo', box(250, 6, 520, 46), 'rp-title', r.length ? '<b>VENTA FAC. ELECTRONICA MANUAL</b><small>ESTE COMPROBANTE NO ESTA APROBADO POR AFIP</small>' : '');
-  h += `<div class="abs" style="${box(955, 10, 26, 30)}">${I.wifi}</div>`;
-
-  // Barra izquierda (botones del renglón)
-  h += `<div class="abs rp-toolbar" style="${box(10, 83, 48, 378)}"></div>`;
-  [['mas', I.plus], ['menos', I.minus], ['cantidad', I.qty], ['lapiz', I.pencil], ['tacho', I.trash], ['etiqueta', I.tag], ['arriba', I.up], ['abajo', I.down]]
-    .forEach(([id, ic], i) => { h += spot(id, box(10, 83 + i * 42, 48, 42), 'rp-tb', ic); });
-  h += `<div class="abs rp-tb last" style="${box(10, 419, 48, 42)};opacity:.55" title="Sin documentar">${I.chart}</div>`;
-
-  // Panel central
-  h += `<div class="abs rp-main" style="${box(59, 63, 704, 420)}"></div>`;
-  const art = cur ? (cur.t === 'i' ? `${fmtQty(cur.qty)} x ${esc(cur.name)}` : esc(cur.name)) : '';
-  const artP = cur ? money(cur.t === 'i' ? cur.price : -cur.amount) : '';
-  h += spot('articulo', box(69, 74, 684, 49), '',
-    `<div class="abs" style="left:0;top:0;width:6.3%;height:100%;display:flex;align-items:center;justify-content:center">${I.cart.replace('<svg', '<svg style="width:85%;height:85%"')}</div>` +
-    `<div class="abs field" style="left:8.6%;top:0;width:68.6%;height:100%">${art}</div>` +
-    `<div class="abs field" style="left:78.1%;top:0;width:21.9%;height:100%;justify-content:flex-end">${artP}</div>`);
-  h += spot('carrito', box(69, 134, 683, 286), 'rp-table', cartRows());
-  const codeField = S.mode === 'practice'
-    ? '<input id="rpCode" aria-label="Código del artículo" inputmode="numeric" placeholder="Escribí un código y Enter">'
-    : '';
-  h += spot('codigo', box(69, 423, 685, 49), '',
-    `<div class="abs" style="left:0;top:0;width:11.7%;height:100%">${BARCODE}</div>` +
-    `<div class="abs field" style="left:12.7%;top:0;width:78.7%;height:100%;font-weight:400">${codeField}</div>` +
-    `<div class="abs field rp-qty1" style="left:92.9%;top:0;width:7.1%;height:100%">1</div>`);
-
-  // Columna derecha
-  h += spot('totales', box(774, 63, 215, 276), '',
-    `<div class="abs box" style="left:0;top:0;width:100%;height:31.9%">${r.length ? money(t.sub) : ''}</div>` +
-    `<div class="abs box" style="left:0;top:35.5%;width:100%;height:31.9%">${r.length ? money(-t.dsc) : ''}</div>` +
-    `<div class="abs box strong" style="left:0;top:73.2%;width:100%;height:26.8%">${r.length ? money(t.total) : ''}</div>`);
-  h += spot('productos', box(774, 415, 215, 49), 'abtn b-blue', `${I.search}<span>Productos</span><small>(B)</small>`);
-  h += spot('cancelar', box(774, 473, 215, 49), 'abtn b-red', `${I.cancel}<span><span class="u">C</span>ancelar</span>`);
-  h += spot('pagar', box(774, 532, 215, 49), 'abtn b-green', `${I.check}<span><span class="u">P</span>agar</span>`);
-
-  // Franja inferior
-  h += `<div class="abs rp-items" style="${at(66, 486)}">Cant. Items: ${r.filter(x => x.t === 'i').length || ''}</div>`;
-  h += `<div class="abs" style="${box(8, 500, 92, 86)}">${OWL.replace('<svg', '<svg style="width:100%;height:100%"')}</div>`;
-  h += `<div class="abs rp-brand" style="${at(100, 537)}">BuhoManager.com</div>`;
-  h += spot('cliente', box(325, 493, 214, 86), 'panel', `<b>Cliente</b><span class="ic">${I.person}${I.chev2}</span><span class="val">${esc(S.client || '')}</span>`);
-  h += spot('factura', box(550, 493, 214, 86), 'panel', `<b>Factura</b><span class="ic">${I.doc}${I.person}</span><span class="val">${esc(S.fact || '')}</span>`);
-  h += `<div class="abs rp-clock" id="rpClock" style="${at(10, 584)}"></div>`;
-
-  base.innerHTML = h;
+  base.innerHTML = S.screen === 'cobro' ? tenderScreen() : saleScreen();
+  pos.dataset.screen = S.screen;
   tick();
   renderDots();
   if (keepFocus) { const c = $('#rpCode'); if (c) c.focus(); }
 }
 
 export function renderDots() {
-  pos.classList.toggle('nodots', !S.dots);
+  pos.classList.toggle('nodots', !S.dots || S.screen === 'cobro');
   dotsEl.innerHTML = SPOT_IDS.map(id => {
     const [x, y, w] = SPOTS[id].box;
-    return `<span class="dot${S.seen.has(id) ? ' seen' : ''}" style="${at(Math.min(x + w - 4, 994), y + 5)}"></span>`;
+    const small = w < 30;
+    return `<span class="dot${S.seen.has(id) ? ' seen' : ''}${small ? ' sm' : ''}" style="${at(small ? x + w / 2 : Math.min(x + w - 5, 1034), small ? y - 3 : y + 6)}"></span>`;
   }).join('');
   const n = S.seen.size, tot = SPOT_IDS.length;
   $('#progTxt').textContent = `${n} de ${tot}`;
@@ -106,18 +198,10 @@ export function markPinned(id) {
 export const spotEl = id => $(`.sp[data-spot="${id}"]`, base);
 
 function tick() {
-  const c = $('#rpClock');
+  const c = $('.rclock', base);
   if (!c) return;
   const d = new Date(), p = n => String(n).padStart(2, '0');
   c.textContent = `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-}
-
-function onCodeEnter(input) {
-  const v = input.value.trim(), p = CATALOG.find(c => c[0] === v);
-  if (p) addItem(p);
-  else if (v) addLog(`No se encontró el código ${v}. Probá con 8902, 1 o 206.`);
-  pin('codigo', { video: false });
-  renderBase(); renderInfo();
 }
 
 export function initReplica() {
@@ -125,20 +209,32 @@ export function initReplica() {
 
   base.addEventListener('click', e => {
     if (e.target.id === 'rpCode') return;
+    const a = e.target.closest('[data-act]');
+    if (a) { tenderAction(a.dataset.act, a); return; }
     const row = e.target.closest('[data-row]');
-    if (row && S.mode === 'practice') { S.sel = +row.dataset.row; pin('carrito', { video: false }); renderBase(); return; }
+    if (row && S.mode === 'practice') { S.sel = +row.dataset.row; pin('carrito', { video: false }); renderBase(); renderInfo(); return; }
     const el = e.target.closest('[data-spot]');
     if (!el) return;
     const id = el.dataset.spot;
-    if (id === 'menu') { pin(id); openCheat(); return; }
     if (S.mode === 'practice') { pin(id, { video: S.pinned !== id }); act(id); return; }
+    if (id === 'menu') { pin(id); openCheat(keyState()); return; }
     pin(id, { play: true });
     if (window.innerWidth < 1080) $('#insp').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   base.addEventListener('keydown', e => {
-    if (e.target.id === 'rpCode') { if (e.key === 'Enter') { e.preventDefault(); onCodeEnter(e.target); } return; }
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset.spot) { e.preventDefault(); e.target.click(); }
+    if (e.target.id === 'rpCode') {
+      if (e.key === 'Enter') { e.preventDefault(); codeEntered(e.target.value.trim()); return; }
+      // Como en la Caja, el campo de código solo acepta números: el resto de las teclas son atajos.
+      const combo = comboFromEvent(e);
+      const typing = /^[0-9]$/.test(combo || '') || ['Backspace', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key);
+      if (typing || !combo) return;
+      e.preventDefault();
+      const r = practiceKey(combo);
+      if (r && r.spot) { const el = spotEl(r.spot); if (el) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }
+      return;
+    }
+    if ((e.key === 'Enter' || e.key === ' ') && (e.target.dataset.spot || e.target.dataset.act)) { e.preventDefault(); e.target.click(); }
   });
 
   // Vista previa al pasar el cursor (solo en equipos con mouse)
@@ -146,8 +242,7 @@ export function initReplica() {
     base.addEventListener('mouseover', e => {
       const el = e.target.closest('[data-spot]');
       if (!el) return;
-      const id = el.dataset.spot;
-      const next = id === S.pinned ? null : id;
+      const next = el.dataset.spot === S.pinned ? null : el.dataset.spot;
       if (S.preview !== next) { S.preview = next; renderInfo(); }
     });
     pos.addEventListener('mouseleave', () => { if (S.preview) { S.preview = null; renderInfo(); } });

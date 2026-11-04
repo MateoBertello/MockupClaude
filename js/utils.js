@@ -30,9 +30,13 @@ export const store = {
 
 export const canHover = window.matchMedia('(hover: hover)').matches;
 
-/* El lienzo de la Caja mide 1000 x 600 unidades; estas funciones las pasan a porcentajes. */
-export const box = (x, y, w, h) => `left:${x / 10}%;top:${y / 6}%;width:${w / 10}%;height:${h / 6}%`;
-export const at = (x, y) => `left:${x / 10}%;top:${y / 6}%`;
+/* La réplica usa los píxeles reales de la Caja (1040 x 655); estas funciones los pasan a porcentajes
+   y el tamaño de letra a unidades del contenedor, para que todo escale junto. */
+export const CW = 1040, CH = 655;
+const pc = (v, d) => +(v / d * 100).toFixed(4);
+export const box = (x, y, w, h) => `left:${pc(x, CW)}%;top:${pc(y, CH)}%;width:${pc(w, CW)}%;height:${pc(h, CH)}%`;
+export const at = (x, y) => `left:${pc(x, CW)}%;top:${pc(y, CH)}%`;
+export const fs = px => `font-size:${pc(px, CW)}cqw`;
 
 export const play = video => { const p = video.play(); if (p && p.catch) p.catch(() => {}); };
 export const flash = el => { if (!el) return; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); };

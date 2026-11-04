@@ -146,8 +146,8 @@
     <div class="banners">
       <button type="button" class="banner" id="cheatBanner">
         <span class="tile" data-line="keyboard"></span>
-        <span><b>Atajos de teclado</b><small>Los 14 atajos del menú, con un teclado para buscarlos.</small></span>
-        <span class="keys"><kbd class="key">B</kbd><kbd class="key">F</kbd><kbd class="key">CTRL</kbd><kbd class="key">Q</kbd></span>
+        <span><b>Atajos de teclado</b><small>Las teclas de cada pantalla: venta, cobro, sin venta y más.</small></span>
+        <span class="keys"><kbd class="key">B</kbd><kbd class="key">S</kbd><kbd class="key">H</kbd><kbd class="key">P</kbd></span>
       </button>
       <button type="button" class="banner banner-web" id="webBanner">
         <span class="tile" data-line="cloud"></span>
@@ -205,13 +205,15 @@
 <div class="overlay" id="cheat" hidden role="dialog" aria-modal="true" aria-labelledby="cheatTitle">
   <div class="cheat">
     <div class="cheat-h">
-      <div><h2 id="cheatTitle">Atajos de la Caja</h2><p>Los mismos que muestra el menú de tres rayas entre paréntesis. Presioná una tecla para encontrarla.</p></div>
+      <div><h2 id="cheatTitle">Atajos de la Caja</h2><p>Cada pantalla tiene sus teclas. Elegí una y presioná cualquier tecla para ver qué hace.</p></div>
       <button type="button" class="xbtn" data-close aria-label="Cerrar">✕</button>
     </div>
+    <div class="cheat-tabs" id="cheatTabs" role="tablist" aria-label="Pantalla de la Caja"></div>
+    <p class="cheat-desc" id="cheatDesc"></p>
     <div class="kb"><div class="kb-in" id="kb"></div></div>
     <div class="cheat-try">Última tecla: <output id="lastKey">—</output><span id="lastHit"></span></div>
     <div class="cheat-list" id="cheatList"></div>
-    <div class="cheat-f" id="cheatFoot"></div>
+    <div class="cheat-f">Fuente: el keymap de la Caja (retail33). Las teclas Num son las del teclado numérico.</div>
   </div>
 </div>
 

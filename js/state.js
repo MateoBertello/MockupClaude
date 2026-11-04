@@ -11,8 +11,11 @@ export const S = {
   seen: new Set(store.get('seen', [])),
   rows: sampleSale(),       // renglones: { t: 'i', ... } artículo, { t: 'd', of, amount } descuento
   sel: 1,
-  client: null,
-  fact: null,
+  screen: 'venta',          // 'venta' | 'cobro' (Pago detallado)
+  client: null,             // cliente del local: { doc, name, iva, balance }
+  fact: null,               // cliente de facturación: { doc, name, iva }
+  comprobante: null,        // null = factura electrónica manual; si no, 'Factura B', 'Factura A'…
+  lastQuery: '',            // último filtro de Productos (la tecla V lo conserva)
   dlg: null,                // ventana abierta dentro de la réplica
   pays: [],                 // pagos cargados en Pago detallado
   log: []                   // últimas acciones de práctica
@@ -46,8 +49,11 @@ export function markSeen(id) {
 }
 
 export function clearSale() {
-  S.rows = []; S.sel = 0; S.client = null; S.fact = null; S.pays = [];
+  S.rows = []; S.sel = 0; S.client = null; S.fact = null; S.comprobante = null; S.pays = []; S.screen = 'venta';
 }
+
+/** Pantalla del keymap en la que está la práctica. */
+export const keyState = () => (S.screen === 'cobro' ? 'cobro' : S.rows.length ? 'venta' : 'libre');
 export function resetSale() {
   clearSale();
   S.rows = sampleSale(); S.sel = 1;
