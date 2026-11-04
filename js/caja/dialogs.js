@@ -55,7 +55,7 @@ function pagoScreen() {
   h += `<span class="abs abtn b-red pd-btn" style="${box(774, 415, 215, 49)}" data-act="limpiar" role="button">${I.clean}<span><span class="u">L</span>impiar</span></span>`;
   h += `<span class="abs abtn b-volver pd-btn" style="${box(774, 473, 215, 49)}" data-act="volver" role="button">${I.back}<span><span class="u">V</span>olver</span></span>`;
   h += `<span class="abs abtn b-green pd-btn${saldo > 0 ? ' off' : ''}" style="${box(774, 532, 215, 49)}" data-act="pd-pagar" role="button" aria-disabled="${saldo > 0}">${I.check}<span><span class="u">P</span>agar</span></span>`;
-  h += `<div class="abs pd-hint" style="${box(255, 470, 500, 18)}">Toque un medio de pago o use las teclas 1 a 6</div>`;
+  h += `<div class="abs pd-hint" style="${box(255, 470, 500, 18)}">Tocá un medio de pago o usá las teclas 1 a 6</div>`;
   return h;
 }
 
@@ -121,7 +121,7 @@ const HANDLERS = {
     else if (a === 'kp-inc' || a === 'kp-dec') { d.v = String(Math.max(0, (parseFloat(d.v) || 0) + (a === 'kp-inc' ? 1 : -1))); show(); }
     else if (a === 'ok') {
       const q = parseFloat(d.v);
-      if (!(q > 0)) { d.v = ''; screen.textContent = 'Ingrese un número'; return; }
+      if (!(q > 0)) { d.v = ''; screen.textContent = 'Ingresá un número'; return; }
       r.qty = q;
       addLog(`${r.name}: cantidad ${fmtQty(q)} · Total ${money(totals().total)}`);
       done();
@@ -130,7 +130,7 @@ const HANDLERS = {
   descuento(a) {
     if (a !== 'ok') return;
     const r = selItem(), v = num('#dVal'), pct = $('#dTipo').value === 'pct', line = r.qty * r.price;
-    if (!(v > 0)) { $('#dErr').textContent = 'Escriba un valor mayor que cero.'; return; }
+    if (!(v > 0)) { $('#dErr').textContent = 'Escribí un valor mayor que cero.'; return; }
     const amount = Math.round((pct ? line * v / 100 : v) * 100) / 100;
     if (amount > line) { $('#dErr').textContent = 'El descuento supera el importe del artículo.'; return; }
     const at = S.rows.indexOf(r) + 1;
@@ -144,7 +144,7 @@ const HANDLERS = {
     const r = selItem(), m = num('#pMonto'), p = num('#pPct');
     if (m > 0) r.price = m;
     else if (p > 0) r.price = Math.round(r.price * ($('#pTipo').value === 'rec' ? 1 + p / 100 : 1 - p / 100) * 100) / 100;
-    else { $('#pErr').textContent = 'Escriba un monto o un porcentaje.'; return; }
+    else { $('#pErr').textContent = 'Escribí un monto o un porcentaje.'; return; }
     addLog(`Nuevo precio de ${r.name}: ${money(r.price)} · Total ${money(totals().total)}`);
     done();
   },
@@ -163,7 +163,7 @@ const HANDLERS = {
     if (a !== 'aviso-go') return;
     const x = S.rows[S.sel], di = S.rows.findIndex(z => z.t === 'd' && z.of === x.id);
     if (di >= 0) S.sel = di;
-    addLog('Seleccionado el renglón del descuento. Ahora sí puede quitarlo.');
+    addLog('Seleccionado el renglón del descuento. Ahora sí podés quitarlo.');
     done();
   },
   productos(a, el, d) {
@@ -175,7 +175,7 @@ const HANDLERS = {
     if (a === 'medio') { openDlg({ k: 'pagoMonto', medio: MEDIOS[+el.dataset.m][0], def: Math.max(0, t - p) }); return; }
     if (a === 'pm-ok') {
       const v = num('#pmV');
-      if (!(v > 0)) { $('#pmErr').textContent = 'Escriba un importe mayor que cero.'; return; }
+      if (!(v > 0)) { $('#pmErr').textContent = 'Escribí un importe mayor que cero.'; return; }
       S.pays.push({ medio: d.medio, monto: v });
       addLog(`${d.medio}: ${money(v)} · Saldo ${money(Math.max(0, t - p - v))}`);
       backToPago(); renderInfo(); return;

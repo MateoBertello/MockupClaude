@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-AR" data-area="pos">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Centro de Ayuda BuhoManager</title>
-  <meta name="description" content="Aprenda a usar la Caja de BuhoManager tocando la propia interfaz: mapa interactivo, videos con transcripción, atajos y guías del sistema web.">
+  <meta name="description" content="Aprendé a usar la Caja POS y el Sistema Web de BuhoManager: ruta de videos con paso a paso, una Caja de práctica interactiva, atajos y guías de cada módulo.">
   <meta name="theme-color" content="#0D4C73">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +18,7 @@
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
 
 <header class="top">
   <div class="wrap top-in">
@@ -25,134 +26,178 @@
       <span class="brand-mark" data-owl></span>
       <div><b>BuhoManager</b><span>Centro de Ayuda</span></div>
     </a>
-    <button class="searchbtn" id="openSearch" type="button" aria-label="Buscar en la ayuda">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
-      <span class="ph">Buscar un botón, un atajo o un momento de un video</span>
-      <kbd>Ctrl K</kbd>
-    </button>
-    <span class="ver">Caja 4.46.1 · Web 3.59.2</span>
+    <nav class="envs" aria-label="Elegí qué querés aprender">
+      <button type="button" data-env="pos" aria-pressed="true"><span data-line="monitor"></span><span><b>Caja POS</b><small>Escritorio</small></span></button>
+      <button type="button" data-env="web" aria-pressed="false"><span data-line="cloud"></span><span><b>Sistema Web</b><small>Plan Nube</small></span></button>
+    </nav>
+    <div class="top-tools">
+      <button class="iconbtn" type="button" data-open-search aria-label="Buscar en la ayuda"><span data-line="search"></span><kbd>Ctrl K</kbd></button>
+      <button class="iconbtn" type="button" id="openCheat" aria-label="Atajos de teclado"><span data-line="keyboard"></span><kbd>?</kbd></button>
+    </div>
   </div>
 </header>
 
-<nav class="wrap tabs" aria-label="Secciones de la ayuda">
-  <div role="tablist" class="tablist">
-    <button class="tab" role="tab" data-tab="caja" aria-selected="true">Mapa de la Caja <span class="count" id="cnt-spots">19</span></button>
-    <button class="tab" role="tab" data-tab="videos" aria-selected="false">Videos tutoriales <span class="count">5</span></button>
-    <button class="tab" role="tab" data-tab="web" aria-selected="false">Sistema web <span class="count">12</span></button>
+<section class="hero" id="hero" aria-labelledby="heroTitle">
+  <div class="wrap hero-in">
+    <p class="eyebrow" id="heroEyebrow">Caja POS · escritorio · versión 4.46.1</p>
+    <h1 id="heroTitle">Aprendé la Caja <span>tocándola.</span></h1>
+    <p class="hero-lede" id="heroLede">Videos cortos, el paso a paso y una Caja de práctica donde podés equivocarte tranquilo.</p>
+    <button type="button" class="hero-search" data-open-search>
+      <span data-line="search"></span><span class="ph">¿Qué necesitás resolver hoy?</span><kbd>/</kbd>
+    </button>
+    <div class="hero-chips" id="heroChips"></div>
   </div>
-  <button class="tab tab-atajos" type="button" id="openCheat">Atajos de teclado <span class="kbd">?</span></button>
-</nav>
+</section>
 
-<main class="wrap">
+<main class="wrap" id="contenido" tabindex="-1">
 
-  <!-- MAPA DE LA CAJA -->
-  <section id="view-caja" class="view" aria-label="Mapa interactivo de la Caja">
-    <div class="intro">
-      <div>
-        <p class="eyebrow">Caja de escritorio · versión 4.46.1</p>
-        <h1 class="h1">Toque la Caja para aprender</h1>
-        <p class="lede">Pase el cursor por cualquier botón y el panel le explica qué hace, su atajo y el momento exacto del video donde se ve. En <b>Practicar</b> los botones funcionan con una venta de ejemplo.</p>
+  <!-- ===================== CAJA POS ===================== -->
+  <div id="view-caja" class="view">
+
+    <!-- Ruta de videos -->
+    <section class="sec" id="sec-ruta" aria-labelledby="rutaTitle">
+      <div class="sec-h">
+        <div><p class="eyebrow">Ruta recomendada</p><h2 id="rutaTitle">Dominá la Caja en 6 videos</h2><p>Cortos, narrados y con el paso a paso al lado. Arrancá por el primero o elegí el que necesites.</p></div>
       </div>
-      <div class="controls">
-        <div class="seg" role="group" aria-label="Modo del mapa">
-          <button type="button" data-mode="explore" aria-pressed="true">Explorar</button>
-          <button type="button" data-mode="practice" aria-pressed="false">Practicar</button>
+      <div class="route card">
+        <span class="tile" data-line="route"></span>
+        <div class="route-txt"><b>Tu progreso</b><small id="routeMeta">6 videos</small></div>
+        <div class="route-prog">
+          <div class="route-cap"><span id="routeCount">0 de 6 vistos</span></div>
+          <div class="route-bar" id="routeBar" role="progressbar" aria-label="Videos vistos" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><i id="routeFill"></i></div>
         </div>
-        <label class="chk"><input type="checkbox" id="dotsToggle" checked> Puntos</label>
-        <span class="prog" title="Elementos explorados"><span id="progTxt">0 de 19</span><span class="bar"><i id="progBar"></i></span></span>
+        <button type="button" class="btn btn-primary" id="routeStart">Empezar la ruta</button>
       </div>
-    </div>
+      <div class="vgrid" id="vgrid"></div>
+      <div class="soon" id="soon"></div>
+    </section>
 
-    <div class="split">
-      <div class="stage">
-        <div class="win">
-          <div class="win-bar">
-            <span class="win-ic" data-owl-small></span>
-            <span class="t">Buho Manager - @Copyright URS Company - 4.46.1 #0</span>
-            <span class="wc" aria-hidden="true"><span>—</span><span>☐</span><span>✕</span></span>
+    <!-- Accesos directos -->
+    <section class="sec" aria-labelledby="tasksTitle">
+      <div class="sec-h"><div><h2 id="tasksTitle">Directo a lo que necesitás</h2><p>Cada acceso te lleva al capítulo justo del video.</p></div></div>
+      <div class="tasks" id="tasks"></div>
+    </section>
+
+    <!-- Mapa interactivo -->
+    <section class="sec" id="sec-mapa" aria-labelledby="mapaTitle">
+      <div class="sec-h">
+        <div>
+          <p class="eyebrow">Caja de práctica · <span id="cnt-spots">19</span> puntos</p>
+          <h2 id="mapaTitle">Tocá la Caja</h2>
+          <p>Pasá el cursor por cualquier botón y el panel te explica qué hace, su atajo y el momento del video donde se ve. En <b>Practicar</b> los botones funcionan con una venta de ejemplo.</p>
+        </div>
+        <div class="controls">
+          <div class="seg" role="group" aria-label="Modo del mapa">
+            <button type="button" data-mode="explore" aria-pressed="true">Explorar</button>
+            <button type="button" data-mode="practice" aria-pressed="false">Practicar</button>
           </div>
-          <div class="pos" id="pos" aria-label="Réplica de la pantalla de venta">
-            <div id="rp-base"></div>
-            <div id="rp-dots"></div>
-            <div class="rp-dlg" id="rp-dlg" hidden></div>
+          <label class="chk"><input type="checkbox" id="dotsToggle" checked> Puntos</label>
+          <span class="prog" title="Puntos explorados"><span id="progTxt">0 de 19</span><span class="bar"><i id="progBar"></i></span></span>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="stage">
+          <div class="win">
+            <div class="win-bar">
+              <span class="win-ic" data-owl-small></span>
+              <span class="t">Buho Manager - @Copyright URS Company - 4.46.1 #0</span>
+              <span class="wc" aria-hidden="true"><span>—</span><span>☐</span><span>✕</span></span>
+            </div>
+            <div class="pos" id="pos" aria-label="Réplica de la pantalla de venta">
+              <div id="rp-base"></div>
+              <div id="rp-dots"></div>
+              <div class="rp-dlg" id="rp-dlg" hidden></div>
+            </div>
+          </div>
+          <div class="stage-note">
+            <div class="legend">
+              <span class="pill g-bar">Barra superior</span>
+              <span class="pill g-row">Botones del renglón</span>
+              <span class="pill g-sale">Venta en curso</span>
+              <span class="pill g-act">Acciones de la venta</span>
+              <span class="pill g-panel">Paneles inferiores</span>
+            </div>
+            <button type="button" class="ghost" id="resetSale">Reiniciar venta de ejemplo</button>
           </div>
         </div>
-        <div class="stage-note">
-          <div class="legend">
-            <span class="pill g-bar">Barra superior</span>
-            <span class="pill g-row">Botones del renglón</span>
-            <span class="pill g-sale">Venta en curso</span>
-            <span class="pill g-act">Acciones de la venta</span>
-            <span class="pill g-panel">Paneles inferiores</span>
+
+        <aside class="insp card" id="insp" aria-live="polite">
+          <div id="insp-info"></div>
+          <div class="vid">
+            <div class="vid-top"><span class="vid-label" id="vidLabel">Video</span><span class="pill st-warn" id="vidSeg">—</span></div>
+            <div class="chips" id="vidChips"></div>
+            <div class="player">
+              <video id="iv" playsinline controls preload="metadata"></video>
+              <div class="seg-end" id="segEnd"><button type="button" id="segReplay">Repetir</button><button type="button" id="segGo">Seguir viendo</button></div>
+            </div>
+            <div class="cues" id="ivCues"></div>
           </div>
-          <button type="button" class="ghost" id="resetSale">Reiniciar venta de ejemplo</button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Respuestas rápidas -->
+    <section class="sec" aria-labelledby="quickTitle">
+      <div class="sec-h"><div><h2 id="quickTitle">Respuestas rápidas</h2><p>Los casos que más se consultan en la caja, resueltos en un toque.</p></div></div>
+      <div class="qgrid" id="qgrid"></div>
+    </section>
+
+    <div class="banners">
+      <button type="button" class="banner" id="cheatBanner">
+        <span class="tile" data-line="keyboard"></span>
+        <span><b>Atajos de teclado</b><small>Los 14 atajos del menú, con un teclado para buscarlos.</small></span>
+        <span class="keys"><kbd class="key">B</kbd><kbd class="key">F</kbd><kbd class="key">CTRL</kbd><kbd class="key">Q</kbd></span>
+      </button>
+      <button type="button" class="banner banner-web" id="webBanner">
+        <span class="tile" data-line="cloud"></span>
+        <span><b>¿La gestión de tu comercio está en la nube?</b><small>Artículos, stock, clientes y más. Cada módulo tiene su lugar.</small></span>
+        <span class="go">Ir al Sistema Web <span data-line="arrow"></span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================== LECCIÓN ===================== -->
+  <div id="view-video" class="view" hidden>
+    <div id="lHead"></div>
+    <div class="lesson">
+      <div class="lmain">
+        <div class="player lplayer">
+          <video id="lv" playsinline controls preload="metadata"></video>
         </div>
+        <div class="lsteps-h"><p class="eyebrow">Paso a paso</p><small>Se marca solo mientras avanza el video. Tocá un paso para ir a ese momento.</small></div>
+        <div id="lSteps"></div>
       </div>
-
-      <aside class="insp card" id="insp" aria-live="polite">
-        <div id="insp-info"></div>
-        <div class="vid">
-          <div class="vid-top"><span class="vid-label" id="vidLabel">Video</span><span class="pill st-warn" id="vidSeg">—</span></div>
-          <div class="chips" id="vidChips"></div>
-          <div class="player">
-            <video id="iv" playsinline controls preload="metadata"></video>
-            <div class="seg-end" id="segEnd"><button type="button" id="segReplay">Repetir</button><button type="button" id="segGo">Seguir viendo</button></div>
-          </div>
-          <div class="cues" id="ivCues"></div>
-        </div>
-      </aside>
+      <aside class="lside" id="lSide" aria-label="Capítulos y progreso"></aside>
     </div>
+  </div>
 
-    <div class="sec-h"><h2>Respuestas rápidas</h2><p>Los casos que más se consultan en la caja, resueltos en un toque.</p></div>
-    <div class="qgrid" id="qgrid"></div>
-  </section>
-
-  <!-- VIDEOS -->
-  <section id="view-videos" class="view" hidden aria-label="Videos tutoriales">
-    <div class="intro">
-      <div>
-        <p class="eyebrow">Serie de la Caja · narrados en español</p>
-        <h1 class="h1">Videos con transcripción paso a paso</h1>
-        <p class="lede">Cada paso de la transcripción es un enlace al segundo exacto. Mientras el video avanza, el paso que se está narrando queda marcado.</p>
+  <!-- ===================== SISTEMA WEB ===================== -->
+  <div id="view-web" class="view" hidden>
+    <section class="sec" id="webHome" aria-labelledby="webTitle">
+      <div class="sec-h">
+        <div><p class="eyebrow">Todo conectado</p><h2 id="webTitle">Una ayuda para cada parte de tu negocio</h2><p>Elegí un módulo y encontrá por dónde empezar.</p></div>
+        <span class="pill g-act">12 módulos · Plan Nube</span>
       </div>
-    </div>
-    <div class="vcards" id="vcards"></div>
-    <div class="soon" id="soon"></div>
-    <div class="vt">
-      <div class="card vt-steps" id="vtSteps"></div>
-      <div class="vt-player">
-        <div class="card">
-          <div class="player player-flush"><video id="vtv" playsinline controls preload="metadata"></video></div>
-          <div class="chapbar" id="chapbar"></div>
-          <div class="vt-spots" id="vtSpots"></div>
-        </div>
+      <div class="card login-q">
+        <b>Cómo ingresar</b>
+        <ol><li>Abrí sistema.buhomanager.com</li><li>Completá Cliente, Usuario y Contraseña</li><li>Presioná Iniciar Sesión</li></ol>
       </div>
-    </div>
-  </section>
+      <div class="mgrid" id="mgrid"></div>
+    </section>
 
-  <!-- SISTEMA WEB -->
-  <section id="view-web" class="view" hidden aria-label="Módulos del sistema web">
-    <div class="intro">
-      <div>
-        <p class="eyebrow">sistema.buhomanager.com · versión 3.59.2</p>
-        <h1 class="h1">El sistema web, módulo por módulo</h1>
-        <p class="lede">Lo que se configura en la web llega a la Caja. Elija un módulo del menú para ver para qué sirve y qué guías tiene.</p>
+    <section class="sec" id="webMod" hidden aria-label="Módulo del Sistema Web">
+      <nav class="crumbs" aria-label="Ubicación"><button type="button" class="crumb" id="webBack"><span data-line="back"></span> Sistema Web</button><span>›</span><span>Módulos</span></nav>
+      <div class="web">
+        <nav class="side" id="side" aria-label="Menú del sistema web"></nav>
+        <div class="web-detail" id="webDetail"></div>
       </div>
-    </div>
-    <div class="card login-q">
-      <b>Cómo ingresar</b>
-      <ol><li>Abra sistema.buhomanager.com</li><li>Complete Cliente, Usuario y Contraseña</li><li>Presione Iniciar Sesión</li></ol>
-      <span class="pill g-panel">Plan Nube</span>
-    </div>
-    <div class="web">
-      <nav class="side" id="side" aria-label="Menú del sistema web"></nav>
-      <div class="web-detail" id="webDetail"></div>
-    </div>
-  </section>
+    </section>
+  </div>
 
   <footer class="foot">
     <span>Mockup del Centro de Ayuda de BuhoManager. Los artículos y montos son de ejemplo, tomados de las capturas y los videos.</span>
-    <span>Tecla <b>B</b> abre Productos · <b>?</b> abre los atajos · <b>Ctrl K</b> busca</span>
+    <span>Tecla <b>B</b> abre Productos · <b>?</b> abre los atajos · <b>/</b> o <b>Ctrl K</b> busca</span>
   </footer>
 </main>
 
@@ -160,7 +205,7 @@
 <div class="overlay" id="cheat" hidden role="dialog" aria-modal="true" aria-labelledby="cheatTitle">
   <div class="cheat">
     <div class="cheat-h">
-      <div><h2 id="cheatTitle">Atajos de la Caja</h2><p>Los mismos que muestra el menú de tres rayas entre paréntesis. Presione una tecla para encontrarla.</p></div>
+      <div><h2 id="cheatTitle">Atajos de la Caja</h2><p>Los mismos que muestra el menú de tres rayas entre paréntesis. Presioná una tecla para encontrarla.</p></div>
       <button type="button" class="xbtn" data-close aria-label="Cerrar">✕</button>
     </div>
     <div class="kb"><div class="kb-in" id="kb"></div></div>
@@ -179,7 +224,7 @@
       <span class="kbd pal-esc">Esc</span>
     </div>
     <div class="pal-res" id="palRes"></div>
-    <div class="pal-foot"><span>↑ ↓ para moverse</span><span>Enter para abrir</span><span>Busca en botones, atajos, transcripciones y módulos</span></div>
+    <div class="pal-foot"><span>↑ ↓ para moverte</span><span>Enter para abrir</span><span>Busca en botones, videos, pasos, atajos y módulos</span></div>
   </div>
 </div>
 

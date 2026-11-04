@@ -24,24 +24,39 @@ h1,h2,h3{text-wrap:balance}
 .brand-mark svg{width:100%;height:100%}
 .brand b{font-weight:800;font-size:18px;letter-spacing:-.01em}
 .brand span{display:block;font-size:12px;opacity:.78;font-weight:500;margin-top:-3px}
-.searchbtn{flex:1;max-width:520px;margin-left:auto;display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:10px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18);font-size:14px;text-align:left;cursor:text;min-width:0}
-.searchbtn:hover{background:rgba(255,255,255,.18)}
-.searchbtn svg{width:16px;height:16px;flex:none;opacity:.85}
-.searchbtn .ph{flex:1;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.searchbtn kbd,.kbd{font-family:var(--font-mono);font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;border:1px solid currentColor;opacity:.75;white-space:nowrap}
-.ver{flex:none;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.14)}
-@media (max-width:640px){.ver,.searchbtn kbd{display:none}.brand span{display:none}}
+.skip{position:absolute;left:-999px;top:8px;z-index:90;background:var(--surface);color:var(--fg);padding:8px 12px;border-radius:8px}
+.skip:focus{left:16px}
 
-/* Pestañas tipo píldora */
-.tabs{display:flex;gap:8px;padding-block:14px 6px;overflow-x:auto;scrollbar-width:none}
-.tablist{display:flex;gap:8px;flex:none}
-.tab{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-weight:600;font-size:14px;white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s}
-.tab:hover{border-color:var(--brand)}
-.tab[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
-.tab .count{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
-.tab[aria-selected="true"] .count{background:rgba(255,255,255,.2);color:#fff}
-.tab-atajos{margin-left:auto}
-.tab-atajos .kbd{opacity:.6}
+/* Selector de entorno: Caja POS / Sistema Web */
+.envs{display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);margin-inline:auto;min-width:0}
+.envs button{display:flex;align-items:center;gap:10px;padding:6px 14px 6px 10px;border-radius:10px;color:rgba(255,255,255,.82);cursor:pointer;text-align:left;transition:background .15s,color .15s;min-width:0}
+.envs button:hover{background:rgba(255,255,255,.08);color:#fff}
+.envs button[aria-pressed="true"]{background:#fff;color:var(--brand-deep);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.envs .lic{width:20px;height:20px;flex:none}
+.envs b{display:block;font-size:14px;font-weight:800;line-height:1.2;white-space:nowrap}
+.envs small{display:block;font-size:11px;opacity:.75;font-weight:600;white-space:nowrap}
+.top-tools{display:flex;gap:6px;flex:none}
+.iconbtn{display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:10px;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);cursor:pointer}
+.iconbtn:hover{background:rgba(255,255,255,.18)}
+.iconbtn .lic{width:18px;height:18px}
+.iconbtn kbd,.kbd,.hero-search kbd{font-family:var(--font-mono);font-size:11px;font-weight:700;padding:2px 6px;border-radius:5px;border:1px solid currentColor;opacity:.75;white-space:nowrap}
+.lic{width:18px;height:18px;flex:none}
+@media (max-width:900px){.brand div{display:none}.iconbtn kbd{display:none}}
+@media (max-width:560px){.envs small{display:none}.envs b{font-size:13px}.envs button{padding:6px 10px 6px 8px;gap:6px}.top-in{gap:8px}.top-tools .iconbtn:last-child{display:none}}
+
+/* Portada con buscador */
+.hero{background:var(--hero);border-bottom:1px solid var(--line)}
+.hero-in{display:flex;flex-direction:column;align-items:center;text-align:center;padding-block:40px 34px;gap:12px}
+.hero h1{font-size:clamp(30px,5vw,52px);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-top:2px}
+.hero h1 span{color:var(--accent-text)}
+.hero-lede{color:var(--muted);font-size:16px;max-width:56ch}
+.hero-search{display:flex;align-items:center;gap:12px;width:min(640px,100%);height:56px;padding:0 16px;margin-top:10px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);color:var(--muted);cursor:text;text-align:left;font-size:16px}
+.hero-search:hover{border-color:var(--brand)}
+.hero-search .lic{width:20px;height:20px;color:var(--accent-text)}
+.hero-search .ph{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+.hero-chips > span{margin-right:4px}
+.chip-q,.hero-chips .chip{height:30px}
 
 /* Píldoras de categoría */
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;line-height:1.4}
@@ -58,8 +73,7 @@ h1,h2,h3{text-wrap:balance}
 :root[data-theme="dark"] .g-bar{background:#2A2F33;color:#E9ECEE}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .g-bar{background:#2A2F33;color:#E9ECEE}}
 
-/* Intro */
-.intro{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 24px;padding-block:18px 16px}
+/* Títulos y controles */
 .eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-text)}
 .h1{font-size:clamp(26px,3.2vw,36px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:4px}
 .lede{color:var(--muted);max-width:62ch;margin-top:8px}

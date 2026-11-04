@@ -39,21 +39,31 @@ export const sampleSale = () => [
 /* Medios de Pago detallado, en el orden de la Caja (teclas 1 a 6). */
 export const MEDIOS = [['Efectivo', I.cash], ['Cta Cte', I.bank], ['T. Débito', I.card], ['T. Crédito', I.card], ['Transferencia', I.transfer], ['MercadoPago', I.mp]];
 
-/* Respuestas rápidas. go: adónde lleva el botón. */
+/* Accesos directos de la Caja: tareas frecuentes que llevan al capítulo justo. */
+export const TASKS = [
+  { title: 'Hacer una venta', sub: 'De cargar a cobrar', icon: 'cart', go: { video: '01', t: 0 } },
+  { title: 'Buscar un artículo', sub: 'Productos · tecla B', icon: 'search', go: { video: '03', t: 0 } },
+  { title: 'Aplicar un descuento', sub: 'Etiqueta verde · % o $', icon: 'tag', go: { video: '04', t: 0 } },
+  { title: 'Cambiar un precio', sub: 'Lápiz naranja', icon: 'edit', go: { video: '04', t: 25.5 } },
+  { title: 'Quitar un artículo', sub: 'Tacho rojo · confirmación', icon: 'trash', go: { video: '05', t: 0 } },
+  { title: 'Cobrar con dos medios', sub: 'Pago detallado', icon: 'card', go: { video: '06', t: 0 } }
+];
+
+/* Respuestas rápidas: problemas concretos de la caja. go: adónde lleva el botón. */
 export const QUICK = [
-  { q: 'La venta quedó con total negativo', a: 'Pasa al quitar un artículo que tenía descuento. Quite primero el renglón del descuento y después el artículo.', label: 'Ver el tacho rojo', go: { spot: 'tacho' } },
-  { q: 'El cliente paga una parte en efectivo y otra con tarjeta', a: 'En Pago detallado elija un medio, escriba el monto y acepte. Repita hasta que el Saldo llegue a cero.', label: 'Ver en el video 06 · 0:18', go: { video: '06', t: 18 } },
-  { q: 'No recuerdo el código del artículo', a: 'Presione Productos o la tecla B y escriba parte del nombre. La lista se achica mientras escribe.', label: 'Ver Productos', go: { spot: 'productos' } },
-  { q: '¿Qué significa VENTA FAC. ELECTRONICA MANUAL?', a: 'Que esa venta se factura a mano en la página de ARCA. Mírelo siempre antes de cobrar.', label: 'Ver en el video 01 · 0:21', go: { video: '01', t: 21 } },
-  { q: 'Me equivoqué al cargar un pago', a: 'Limpiar borra todos los pagos de la lista, previa confirmación. Después vuelva a cargarlos.', label: 'Ver en el video 06 · 0:27', go: { video: '06', t: 27 } },
-  { q: 'Cambié precios en la web y la Caja no los muestra', a: 'Recargue los artículos con CTRL+Q, o desde el menú de tres rayas.', label: 'Ver los atajos', go: { shortcut: 'Recargar Artículos' } }
+  { q: 'La venta quedó con total negativo', a: 'Pasa al quitar un artículo que tenía descuento. Quitá primero el renglón del descuento y después el artículo.', label: 'Ver en el video 05 · 0:04', go: { video: '05', t: 4.5 } },
+  { q: 'El cliente paga una parte en efectivo y otra con tarjeta', a: 'En Pago detallado elegí un medio, escribí el monto y aceptá. Repetí hasta que el Saldo llegue a cero.', label: 'Ver en el video 06 · 0:18', go: { video: '06', t: 18 } },
+  { q: 'No me acuerdo el código del artículo', a: 'Presioná Productos o la tecla B y escribí parte del nombre. La lista se achica mientras escribís.', label: 'Probalo en la Caja', go: { spot: 'productos', practice: true } },
+  { q: '¿Qué significa VENTA FAC. ELECTRONICA MANUAL?', a: 'Que esa venta se factura a mano en la página de ARCA. Miralo siempre antes de cobrar.', label: 'Ver en el video 01 · 0:21', go: { video: '01', t: 21 } },
+  { q: 'Me equivoqué al cargar un pago', a: 'Limpiar borra todos los pagos de la lista, previa confirmación. Después volvé a cargarlos.', label: 'Ver en el video 06 · 0:27', go: { video: '06', t: 27 } },
+  { q: 'Cambié precios en la web y la Caja no los muestra', a: 'Recargá los artículos con CTRL+Q, o desde el menú de tres rayas.', label: 'Ver los atajos', go: { shortcut: 'Recargar Artículos' } }
 ];
 
 /* Menú de sistema.buhomanager.com. subs: [nombre, descripción, tiene guía interactiva]. */
 export const WEB = [
-  { id: 'transacciones', name: 'Gestión Transacciones', desc: 'Consulta de las ventas y los comprobantes que registran las cajas.' },
+  { id: 'transacciones', name: 'Gestión Transacciones', icon: 'receipt', tint: 'var(--t-blue)', desc: 'Tus ventas y los comprobantes que registran las cajas.' },
   {
-    id: 'articulos', name: 'Gestión Artículos', desc: 'Alta y edición de artículos, precios, promociones y etiquetas. Lo que se cambia acá llega a la Caja.',
+    id: 'articulos', name: 'Gestión Artículos', icon: 'box', tint: 'var(--t-green)', desc: 'Tu catálogo, precios, promociones y etiquetas. Lo que cambiás acá llega a la Caja.',
     subs: [
       ['Artículos', 'Lista de artículos con filtros, precios y fecha de actualización.', true],
       ['Insumos', 'Materias primas que componen los artículos.'], ['Carga Rápida', 'Alta de artículos en pocos pasos.'],
@@ -63,21 +73,21 @@ export const WEB = [
       ['Vencimiento', 'Control de fechas de vencimiento.']
     ]
   },
-  { id: 'stock', name: 'Gestión Stock', desc: 'Existencias, ingresos y ajustes de mercadería.' },
-  { id: 'clientes', name: 'Gestión Clientes', desc: 'Clientes del local, cuentas corrientes y datos de facturación que usa el panel Cliente de la Caja.' },
-  { id: 'proveedores', name: 'Gestión Proveedores', desc: 'Proveedores y sus compras.' },
-  { id: 'operadores', name: 'Gestión Operadores', desc: 'Cajeros y operadores que usan la Caja.' },
-  { id: 'gastos', name: 'Gestión Gastos', desc: 'Gastos del comercio, incluidos los que se declaran desde la Caja con CTRL+G.' },
-  { id: 'financiera', name: 'Gestión Financiera', desc: 'Movimientos de dinero y medios de pago.' },
-  { id: 'varias', name: 'Gestiones Varias', desc: 'Configuraciones generales del comercio.' },
-  { id: 'cheques', name: 'Gestión de Cheques', desc: 'Cheques recibidos y emitidos.' },
-  { id: 'reportes', name: 'Reportes', desc: 'Informes de ventas, artículos y caja.' },
-  { id: 'usuarios', name: 'Gestión de Usuarios', desc: 'Usuarios y permisos del sistema web.' }
+  { id: 'stock', name: 'Gestión Stock', icon: 'stock', tint: 'var(--t-amber)', desc: 'Existencias, ingresos y ajustes de mercadería.' },
+  { id: 'clientes', name: 'Gestión Clientes', icon: 'users', tint: 'var(--t-violet)', desc: 'Tus clientes, sus cuentas corrientes y los datos de facturación que usa el panel Cliente de la Caja.' },
+  { id: 'proveedores', name: 'Gestión Proveedores', icon: 'truck', tint: 'var(--t-blue)', desc: 'Tus proveedores y sus compras.' },
+  { id: 'operadores', name: 'Gestión Operadores', icon: 'badge', tint: 'var(--t-amber)', desc: 'Los cajeros y operadores que usan la Caja.' },
+  { id: 'gastos', name: 'Gestión Gastos', icon: 'wallet', tint: 'var(--t-rose)', desc: 'Los gastos del comercio, incluidos los que se declaran desde la Caja con CTRL+G.' },
+  { id: 'financiera', name: 'Gestión Financiera', icon: 'chart', tint: 'var(--t-green)', desc: 'Movimientos de dinero y medios de pago.' },
+  { id: 'varias', name: 'Gestiones Varias', icon: 'sliders', tint: 'var(--t-slate)', desc: 'Configuraciones generales del comercio.' },
+  { id: 'cheques', name: 'Gestión de Cheques', icon: 'cheque', tint: 'var(--t-amber)', desc: 'Cheques recibidos y emitidos.' },
+  { id: 'reportes', name: 'Reportes', icon: 'chart', tint: 'var(--t-violet)', desc: 'Informes de ventas, artículos y caja.' },
+  { id: 'usuarios', name: 'Gestión de Usuarios', icon: 'shield', tint: 'var(--t-blue)', desc: 'Los usuarios y sus permisos en el sistema web.' }
 ];
 
 /* Marcadores de la guía de Artículos: [número, título, explicación]. */
 export const ART_MARKS = [
-  [1, 'Nombre / Código', 'Escriba parte del nombre o el código del artículo.'],
+  [1, 'Nombre / Código', 'Escribí parte del nombre o el código del artículo.'],
   [2, 'Lector de código', 'Busca el artículo leyendo su código de barras.'],
   [3, 'Cod. Extendido, Proveedor y Departamento', 'Filtros para acotar la lista.'],
   [4, 'Marca', 'Filtra por marca. Por defecto muestra todas.'],

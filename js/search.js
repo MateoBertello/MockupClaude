@@ -5,10 +5,11 @@ import { SPOTS, SPOT_IDS } from './data/spots.js';
 import { VIDEOS } from './data/videos.js';
 import { SHORTCUTS, QUICK, WEB } from './data/content.js';
 import { openOverlay, closeOverlay, isOpen } from './overlay.js';
-import { follow } from './router.js';
+import { follow, currentEnv } from './router.js';
 
 const pal = $('#pal'), input = $('#q'), results = $('#palRes');
-const ORDER = ['Caja', 'Respuestas rápidas', 'Atajos', 'Videos', 'Momentos de los videos', 'Sistema web'];
+const ORDER_POS = ['Caja', 'Videos', 'Paso a paso', 'Respuestas rápidas', 'Atajos', 'Lo que dice el video', 'Sistema web'];
+const ORDER_WEB = ['Sistema web', 'Caja', 'Videos', 'Paso a paso', 'Respuestas rápidas', 'Atajos', 'Lo que dice el video'];
 const PER_GROUP = 6;
 const INDEX = [];
 let items = [], active = 0;
@@ -24,8 +25,9 @@ function buildIndex() {
   SHORTCUTS.forEach(s => add('Atajos', s.keys.length > 1 ? '⌃' + s.keys[1] : s.keys[0], `${s.label} (${s.keys.join('+')})`, s.desc, { shortcut: s.label }, `${s.keys.join('+')} ${s.keys.join(' ')}`));
   QUICK.forEach(x => add('Respuestas rápidas', '?', x.q, x.a, x.go));
   Object.entries(VIDEOS).forEach(([id, v]) => {
-    add('Videos', id, v.title, `Video ${id} · ${mmss(v.dur)} · ${v.chapters.map(c => c[1]).join(', ')}`, { video: id, t: 0 });
-    v.cues.forEach(c => add('Momentos de los videos', id, plain(c[1]), `Video ${id} · ${mmss(c[0])} · ${v.title}`, { video: id, t: c[0] }));
+    add('Videos', id, v.title, `Video ${id} · ${mmss(v.dur)} · ${v.chapters.map(c => c.title).join(', ')}`, { video: id, t: 0 }, `${v.category} ${v.desc}`);
+    v.chapters.forEach(c => c.steps.forEach(st => add('Paso a paso', id, st[1], `Video ${id} · ${mmss(st[0])} · ${c.title}`, { video: id, t: st[0] })));
+    v.cues.forEach(c => add('Lo que dice el video', id, plain(c[1]), `Video ${id} · ${mmss(c[0])} · ${v.title}`, { video: id, t: c[0] }));
   });
   WEB.forEach(m => {
     add('Sistema web', 'W', m.name, m.desc, { web: m.id });
@@ -67,7 +69,7 @@ function run() {
 
   items = [];
   let h = '';
-  ORDER.forEach(g => {
+  (currentEnv() === 'web' ? ORDER_WEB : ORDER_POS).forEach(g => {
     if (!byGroup[g]) return;
     h += `<div class="pal-g">${g}</div>`;
     byGroup[g].forEach(it => {
@@ -75,7 +77,7 @@ function run() {
       h += `<button type="button" class="res" data-r="${i}"><span class="ri">${esc(it.ic)}</span><span class="rt"><b>${terms.length ? highlight(it.title, terms) : esc(it.title)}</b><span>${esc(it.sub)}</span></span></button>`;
     });
   });
-  results.innerHTML = h || `<div class="pal-empty">No encontramos “${esc(raw)}”. Pruebe con otra palabra, por ejemplo <b>vuelto</b> o <b>precio</b>.</div>`;
+  results.innerHTML = h || `<div class="pal-empty">No encontramos “${esc(raw)}”. Probá con otra palabra, por ejemplo <b>vuelto</b> o <b>precio</b>.</div>`;
   active = 0;
   markActive();
 }
@@ -93,8 +95,8 @@ function choose(i) {
   follow(it.go);
 }
 
-export function openSearch() {
-  input.value = '';
+export function openSearch(query = '') {
+  input.value = query;
   run();
   openOverlay(pal, input);
 }

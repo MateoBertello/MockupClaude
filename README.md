@@ -2,43 +2,53 @@
 
 Mockup interactivo del Centro de Ayuda de BuhoManager. Es un sitio estático: HTML, CSS y módulos de JavaScript, sin paso de compilación ni dependencias.
 
+Fusiona dos propuestas: de MockupChatGPT toma el selector Caja POS / Sistema Web, la ruta de videos con progreso, el paso a paso por capítulo y la grilla de módulos; de este repo, el mapa interactivo de la Caja con modo Practicar, la narración sincronizada, la hoja de atajos y la guía de Artículos.
+
+## Recorrido
+
+- **Caja POS** (`#caja`): portada con buscador, ruta de los videos 01 a 06 con progreso, accesos directos, la Caja de práctica (`#mapa`, `#punto-<id>`) y respuestas rápidas.
+- **Lección** (`#video-01` … `#video-06`): video, capítulos, paso a paso que se marca solo, la narración literal desplegable, "Ver en la Caja" en cada paso y "Probalo en la Caja" al final.
+- **Sistema Web** (`#web`, `#web-<módulo>`): grilla de los 12 módulos y, al entrar, el menú real con la guía del módulo.
+
 ## Estructura
 
 ```
-index.html              Marcado de la página (pestañas, réplica, overlays)
+index.html              Marcado de la página
 favicon.svg
 vercel.json             Configuración de Vercel (URLs limpias, caché de videos)
 css/
-  tokens.css            Paleta oficial y tema claro/oscuro
-  base.css              Reset, encabezado, pestañas, píldoras, controles
+  tokens.css            Paleta oficial, colores de tarjetas y tema claro/oscuro
+  base.css              Reset, encabezado con selector de entorno, portada, píldoras, controles
   caja.css              Mapa de la Caja, réplica, ventanas de práctica, inspector
-  secciones.css         Respuestas rápidas, Videos, Sistema web
+  secciones.css         Ruta, accesos, respuestas, lección y Sistema Web
   overlays.css          Hoja de atajos y buscador
 js/
   main.js               Punto de entrada y teclado global
-  router.js             Pestañas y enlaces directos (#caja, #videos, #web, #punto-<id>, #video-<nn>)
+  router.js             Entornos, vistas y enlaces directos
   state.js              Estado de la venta de práctica
-  utils.js              Utilidades (DOM, formato, búsqueda sin tildes)
-  icons.js              Íconos SVG
+  progress.js           Videos vistos (localStorage)
+  lesson.js             Vista de lección
+  web.js                Sistema Web: grilla y módulo
+  cheatsheet.js         Hoja de atajos
+  search.js             Buscador instantáneo (Ctrl K o /)
+  overlay.js            Abrir y cerrar capas devolviendo el foco
+  utils.js, icons.js    Utilidades e íconos
   data/
-    spots.js            Los 19 puntos del mapa: textos, atajos, tramos de video
-    videos.js           Videos, capítulos y transcripciones con tiempos
-    content.js          Atajos, catálogo de ejemplo, medios de pago, respuestas rápidas, módulos web
+    videos.js           Videos: capítulos, paso a paso y narración con tiempos
+    spots.js            Los 19 puntos del mapa
+    content.js          Atajos, catálogo de ejemplo, accesos, respuestas rápidas y módulos web
   caja/
-    index.js            Arma la pestaña Mapa de la Caja
+    index.js            Inicio de Caja POS
     replica.js          Dibuja la réplica y recibe los toques
     actions.js          Qué hace cada botón en el modo Practicar
     dialogs.js          Cantidad, Descuento, Cambio de precio, Productos, Pago detallado
-    inspector.js        Panel lateral
+    inspector.js        Panel lateral del mapa
     player.js           Video sincronizado del panel lateral
-  videos.js             Pestaña Videos tutoriales
-  web.js                Pestaña Sistema web
-  cheatsheet.js         Hoja de atajos
-  search.js             Buscador instantáneo (Ctrl K)
-  overlay.js            Abrir y cerrar capas devolviendo el foco
-videos/                 Tutoriales de la Caja en 720p
+videos/                 Tutoriales 01 a 06 en 720p
 posters/                Portadas de los videos
 ```
+
+El paso a paso está escrito de vos para la ayuda; la narración se transcribe literal, de usted, como suena en el video.
 
 Para cambiar contenido casi siempre alcanza con editar `js/data/`.
 

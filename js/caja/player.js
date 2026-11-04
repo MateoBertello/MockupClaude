@@ -5,6 +5,7 @@ import { $, $$, esc, mmss, rich, seekT, play } from '../utils.js';
 import { VIDEOS, videoSrc, posterSrc, cueEnd, cueAt } from '../data/videos.js';
 import { SPOTS } from '../data/spots.js';
 import { S } from '../state.js';
+import { goVideo } from '../router.js';
 
 const video = $('#iv');
 const cuesEl = $('#ivCues');
@@ -19,7 +20,7 @@ export function renderChips() {
   $('#vidChips').innerHTML = s.refs.map((r, i) => {
     const on = st.ref && st.ref.v === r.v && st.ref.a === r.a;
     return `<button type="button" class="chip${on ? ' on' : ''}" data-ref="${i}">${r.v} · ${esc(VIDEOS[r.v].title)} <span class="t">${mmss(r.a)}</span></button>`;
-  }).join('');
+  }).join('') + '<button type="button" class="chip chip-link" data-lesson>Ver el paso a paso →</button>';
 }
 
 function load(v) {
@@ -86,6 +87,11 @@ export function initPlayer() {
   video.addEventListener('seeked', () => sync(false));
 
   $('#vidChips').addEventListener('click', e => {
+    if (e.target.closest('[data-lesson]')) {
+      const r = st.ref || SPOTS[S.pinned].refs[0];
+      goVideo(r.v, video.currentTime > r.a ? video.currentTime : r.a);
+      return;
+    }
     const b = e.target.closest('[data-ref]');
     if (b) cueRef(SPOTS[S.pinned].refs[+b.dataset.ref], true);
   });

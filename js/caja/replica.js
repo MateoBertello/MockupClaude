@@ -58,7 +58,7 @@ export function renderBase() {
     `<div class="abs field" style="left:78.1%;top:0;width:21.9%;height:100%;justify-content:flex-end">${artP}</div>`);
   h += spot('carrito', box(69, 134, 683, 286), 'rp-table', cartRows());
   const codeField = S.mode === 'practice'
-    ? '<input id="rpCode" aria-label="Código del artículo" inputmode="numeric" placeholder="Escriba un código y Enter">'
+    ? '<input id="rpCode" aria-label="Código del artículo" inputmode="numeric" placeholder="Escribí un código y Enter">'
     : '';
   h += spot('codigo', box(69, 423, 685, 49), '',
     `<div class="abs" style="left:0;top:0;width:11.7%;height:100%">${BARCODE}</div>` +
@@ -115,7 +115,7 @@ function tick() {
 function onCodeEnter(input) {
   const v = input.value.trim(), p = CATALOG.find(c => c[0] === v);
   if (p) addItem(p);
-  else if (v) addLog(`No se encontró el código ${v}. Pruebe con 8902, 1 o 206.`);
+  else if (v) addLog(`No se encontró el código ${v}. Probá con 8902, 1 o 206.`);
   pin('codigo', { video: false });
   renderBase(); renderInfo();
 }

@@ -19,7 +19,7 @@ const logQty = r => addLog(`${r.name}: cantidad ${fmtQty(r.qty)} · Total ${mone
 const ACTIONS = {
   mas(r) { r.qty += 1; logQty(r); },
   menos(r) {
-    if (r.qty <= 1) return addLog('La cantidad mínima es 1. Para quitar el artículo use el tacho.');
+    if (r.qty <= 1) return addLog('La cantidad mínima es 1. Para quitar el artículo usá el tacho.');
     r.qty -= 1; logQty(r);
   },
   cantidad() { openDlg({ k: 'cantidad', v: '' }); },
@@ -31,7 +31,7 @@ const ACTIONS = {
   tacho() {
     const x = S.rows[S.sel];
     if (x.t === 'i' && hasDiscount(x)) {
-      return openDlg({ k: 'aviso', msg: 'Este artículo tiene un descuento. Quite primero el renglón del descuento y después el artículo, así la venta no queda con saldo negativo.' });
+      return openDlg({ k: 'aviso', msg: 'Este artículo tiene un descuento. Quitá primero el renglón del descuento y después el artículo, así la venta no queda con saldo negativo.' });
     }
     openDlg({ k: 'confirm', msg: `¿Quitar el renglón ${x.name}?`, run: 'quitar' });
   },
@@ -43,7 +43,7 @@ const ACTIONS = {
     openDlg({ k: 'confirm', msg: '¿Desea cancelar la venta?', run: 'cancelar' });
   },
   pagar() {
-    if (!S.rows.length || totals().total <= 0) return addLog('Cargue al menos un artículo antes de cobrar.');
+    if (!S.rows.length || totals().total <= 0) return addLog('Cargá al menos un artículo antes de cobrar.');
     S.pays = [];
     openDlg({ k: 'pago' });
     addLog('Se abrió Pago detallado.');
@@ -53,7 +53,7 @@ const ACTIONS = {
     addLog(S.client ? 'Cliente asignado a la venta.' : 'Se quitó el cliente.');
   },
   factura() {
-    if (!S.client) return addLog('Asigne primero un Cliente o cargue los datos de facturación.');
+    if (!S.client) return addLog('Asigná primero un Cliente o cargá los datos de facturación.');
     S.fact = 'Copiado del Cliente con »';
     addLog('Datos de facturación copiados del Cliente.');
   }
@@ -67,7 +67,7 @@ export function act(id) {
   const fn = ACTIONS[id];
   if (!fn) return;
   const r = selItem();
-  if (NEEDS_ITEM.has(id) && !r) addLog('Primero seleccione el renglón de un artículo.');
+  if (NEEDS_ITEM.has(id) && !r) addLog('Primero seleccioná el renglón de un artículo.');
   else if (id === 'tacho' && !S.rows[S.sel]) addLog('No hay renglones para quitar.');
   else fn(r);
   refresh();

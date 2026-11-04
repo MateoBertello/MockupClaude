@@ -1,11 +1,32 @@
-// Videos tutoriales de la Caja. Las transcripciones salen de los subtítulos de cada video.
-// Cada paso es [segundo, texto]; *texto* marca un rótulo de la pantalla.
+// Ruta de videos de la Caja POS.
+// chapters[].steps: el paso a paso, escrito para la ayuda. [segundo, texto, punto del mapa o null].
+// cues: la narración literal del video, sacada de sus subtítulos. *texto* marca un rótulo de pantalla.
 
 export const VIDEOS = {
   '01': {
     file: '01-venta', title: 'Cómo hacer una venta', dur: 83.8,
-    chapters: [[0, 'Cargar el artículo'], [28.5, 'Pagar'], [52.5, 'Efectivo y vuelto']],
-    spots: ['codigo', 'carrito', 'totales', 'titulo', 'pagar'],
+    category: 'Primeros pasos', tint: 'var(--t-blue)',
+    desc: 'Cargá un artículo, cobrá en efectivo y cerrá la venta.',
+    tip: 'Antes de cobrar mirá el título de arriba: te dice cómo se factura esa venta.',
+    practice: 'codigo',
+    chapters: [
+      { t: 0, title: 'Cargar el artículo', steps: [
+        [4.5, 'Escaneá el código de barras del artículo.', 'codigo'],
+        [7.5, 'Si no tenés lector, escribí el código en el campo y presioná Enter.', 'codigo'],
+        [13.5, 'El artículo entra al carrito y el total de la derecha se actualiza.', 'totales'],
+        [19.5, 'Mirá el título: FAC. ELECTRONICA MANUAL significa que la factura se hace a mano en la página de ARCA.', 'titulo']
+      ] },
+      { t: 28.5, title: 'Pagar', steps: [
+        [28.5, 'Cuando termines de cargar, presioná Pagar.', 'pagar'],
+        [33, 'Se abre Pago detallado: a la izquierda los medios de pago y a la derecha el Total y el Saldo.', 'pagar']
+      ] },
+      { t: 52.5, title: 'Efectivo y vuelto', steps: [
+        [52.5, 'Elegí Efectivo, escribí el importe que te entregan y presioná Aceptar.', 'pagar'],
+        [61.5, 'El pago entra a la lista y Vuelto te dice cuánto devolver.', null],
+        [66, 'Presioná Pagar para cerrar la venta y elegí si imprimís el comprobante.', 'pagar'],
+        [78, 'La venta queda registrada y la Caja vuelve a cero.', null]
+      ] }
+    ],
     cues: [
       [0, 'Veamos una venta completa en la *Caja* de principio a fin.'],
       [4.5, 'Escanee el código de barras del artículo.'],
@@ -31,8 +52,28 @@ export const VIDEOS = {
   },
   '02': {
     file: '02-botones', title: 'Botones y atajos', dur: 71.1,
-    chapters: [[0, 'Botones del renglón'], [24, 'Productos, Cancelar y Pagar'], [46.5, 'Menú y atajos']],
-    spots: ['mas', 'menos', 'cantidad', 'lapiz', 'tacho', 'etiqueta', 'arriba', 'abajo', 'productos', 'cancelar', 'pagar', 'cliente', 'factura', 'menu'],
+    category: 'Conocé tu Caja', tint: 'var(--t-slate)',
+    desc: 'Ubicá cada botón y movete más rápido con el teclado.',
+    tip: 'La tecla B abre Productos. El resto de los atajos figura entre paréntesis en el menú de tres rayas.',
+    practice: 'mas',
+    chapters: [
+      { t: 0, title: 'Botones del renglón', steps: [
+        [6, 'Con + y − subís o bajás la cantidad del renglón seleccionado.', 'mas'],
+        [9, 'El tercer botón abre Cantidad para escribir el número exacto.', 'cantidad'],
+        [13.5, 'El lápiz naranja cambia el precio y el tacho rojo quita el renglón.', 'lapiz'],
+        [18, 'La etiqueta verde aplica un descuento y las flechas mueven la selección.', 'etiqueta']
+      ] },
+      { t: 24, title: 'Productos, Cancelar y Pagar', steps: [
+        [24, 'Productos busca artículos por nombre. También se abre con la tecla B.', 'productos'],
+        [31.5, 'Cancelar descarta toda la venta y Pagar abre el cobro.', 'cancelar'],
+        [37.5, 'El panel Cliente asigna un cliente y el panel Factura define el comprobante.', 'cliente']
+      ] },
+      { t: 46.5, title: 'Menú y atajos', steps: [
+        [46.5, 'El botón de tres rayas abre el menú con el resto de las funciones.', 'menu'],
+        [51, 'Cada opción muestra su atajo entre paréntesis, por ejemplo Ctrl + C para el cobro de cuenta corriente.', 'menu'],
+        [67.5, 'Cancelar cierra el menú sin elegir nada.', null]
+      ] }
+    ],
     cues: [
       [0, 'Recorramos los botones y atajos de la *Caja*.'],
       [3, 'Empecemos por la barra de la izquierda.'],
@@ -59,8 +100,22 @@ export const VIDEOS = {
   },
   '03': {
     file: '03-buscar-cantidad', title: 'Buscar artículos y cambiar cantidades', dur: 51.9,
-    chapters: [[0, 'Productos'], [22.5, 'Cantidad']],
-    spots: ['productos', 'carrito', 'mas', 'menos', 'cantidad'],
+    category: 'Productos y cantidades', tint: 'var(--t-green)',
+    desc: 'Encontrá un artículo por nombre y ajustá la cantidad en segundos.',
+    tip: 'Si el artículo tiene una promoción, la Caja la agrega sola en otro renglón.',
+    practice: 'productos',
+    chapters: [
+      { t: 0, title: 'Productos', steps: [
+        [4.5, 'Presioná Productos o la tecla B para abrir la lista.', 'productos'],
+        [10.5, 'Escribí parte del nombre: la lista se achica mientras escribís.', 'productos'],
+        [16.5, 'Hacé clic en el artículo y presioná Aceptar para pasarlo al carrito.', 'carrito']
+      ] },
+      { t: 22.5, title: 'Cantidad', steps: [
+        [22.5, 'Seleccioná el renglón y usá + y − para subir o bajar de a uno.', 'mas'],
+        [33, 'El total se recalcula con cada clic.', 'totales'],
+        [37.5, 'Para un número exacto abrí Cantidad, escribilo y presioná Aceptar.', 'cantidad']
+      ] }
+    ],
     cues: [
       [0, '¿No recuerda el código de un artículo? Lo puede buscar por su nombre.'],
       [4.5, 'Presione *Productos* o la tecla B. Se abre la lista de artículos.'],
@@ -77,8 +132,22 @@ export const VIDEOS = {
   },
   '04': {
     file: '04-descuentos', title: 'Descuentos y cambio de precio', dur: 49.9,
-    chapters: [[0, 'Descuento'], [25.5, 'Cambio de precio']],
-    spots: ['etiqueta', 'totales', 'lapiz'],
+    category: 'Precios y descuentos', tint: 'var(--t-amber)',
+    desc: 'Aplicá un descuento a un artículo o corregí su precio.',
+    tip: 'El descuento queda en un renglón propio. Si después quitás el artículo, sacá primero ese renglón.',
+    practice: 'etiqueta',
+    chapters: [
+      { t: 0, title: 'Descuento', steps: [
+        [3, 'Seleccioná el renglón y presioná la etiqueta verde.', 'etiqueta'],
+        [10.5, 'En Valor escribí cuánto descontar y elegí porcentaje o monto fijo.', 'etiqueta'],
+        [19.5, 'Al aceptar aparece un renglón de descuento y el total baja.', 'totales']
+      ] },
+      { t: 25.5, title: 'Cambio de precio', steps: [
+        [25.5, 'Seleccioná el renglón y presioná el lápiz naranja.', 'lapiz'],
+        [34.5, 'Escribí el monto nuevo, o elegí un recargo o un descuento en porcentaje.', 'lapiz'],
+        [45, 'Si te arrepentís, Cancelar cierra la ventana sin cambiar el precio.', null]
+      ] }
+    ],
     cues: [
       [0, 'Ahora vamos a descontar un solo artículo.'],
       [3, 'Seleccione el renglón y presione la etiqueta verde.'],
@@ -95,10 +164,57 @@ export const VIDEOS = {
       [45, 'Esta vez cerramos con *Cancelar* y el precio queda igual.']
     ]
   },
+  '05': {
+    file: '05-quitar-cancelar', title: 'Quitar artículos y cancelar la venta', dur: 40,
+    category: 'Correcciones', tint: 'var(--t-violet)',
+    desc: 'Sacá un renglón cargado por error o empezá la venta de cero.',
+    tip: 'Antes de confirmar, mirá qué renglón tenés seleccionado: es el que se va a borrar.',
+    warnSpot: 'tacho',
+    practice: 'tacho',
+    chapters: [
+      { t: 0, title: 'Quitar un renglón', steps: [
+        [4.5, 'Si el artículo tiene descuento, seleccioná primero el renglón del descuento.', 'tacho'],
+        [9, 'Presioná el tacho rojo y confirmá con Aceptar.', 'tacho'],
+        [18, 'Después quitá el artículo de la misma forma. Así el total nunca queda negativo.', 'tacho']
+      ] },
+      { t: 24, title: 'Cancelar la venta', steps: [
+        [24, 'Para descartar toda la venta presioná Cancelar.', 'cancelar'],
+        [28.5, 'La Caja te pide confirmar. Revisá antes de aceptar.', 'cancelar'],
+        [31.5, 'Se vacían el carrito, el cliente y la factura.', 'cliente']
+      ] }
+    ],
+    cues: [
+      [0, '¿Cargó algo por error? Se puede quitar antes de cobrar.'],
+      [4.5, 'Si el artículo tiene descuento quite primero ese renglón.'],
+      [9, 'Selecciónelo y presione el tacho rojo. La caja pide confirmación.'],
+      [15, 'Al aceptar el renglón desaparece.'],
+      [18, 'Después quite el artículo de la misma forma.'],
+      [21, 'Así el total nunca queda negativo.'],
+      [24, 'Para descartar toda la venta presione *Cancelar*.'],
+      [28.5, 'La caja pregunta si desea cancelar la transacción.'],
+      [31.5, 'Al aceptar el carrito queda vacío.'],
+      [36, 'También se quitan el cliente y la factura que había elegido.']
+    ]
+  },
   '06': {
     file: '06-medios-pago', title: 'Combinar medios de pago', dur: 46.7,
-    chapters: [[0, 'Pago detallado'], [27, 'Limpiar y Volver']],
-    spots: ['pagar'],
+    category: 'Cobros', tint: 'var(--t-teal)',
+    desc: 'Cobrá una parte en efectivo y otra con tarjeta.',
+    tip: 'Saldo te muestra en todo momento cuánto falta cobrar.',
+    practice: 'pagar',
+    chapters: [
+      { t: 0, title: 'Pago detallado', steps: [
+        [4.5, 'Presioná Pagar para abrir Pago detallado.', 'pagar'],
+        [6, 'Elegí un medio: Efectivo, Cta Cte, tarjetas, Transferencia o MercadoPago.', 'pagar'],
+        [18, 'Escribí el monto que se paga con ese medio y aceptá.', 'pagar'],
+        [21, 'El pago entra a la lista y Saldo muestra lo que falta. Repetí con el otro medio.', null]
+      ] },
+      { t: 27, title: 'Limpiar y Volver', steps: [
+        [27, 'Si te equivocaste, Limpiar borra todos los pagos. Antes pide confirmación.', null],
+        [37.5, 'Cuando el Saldo llega a cero, Pagar registra la venta.', 'pagar'],
+        [42, 'Volver regresa a la venta sin cobrar nada.', null]
+      ] }
+    ],
     cues: [
       [0, '¿El cliente paga una parte en efectivo y otra con tarjeta?'],
       [4.5, 'Para eso está *Pago detallado*.'],
@@ -116,23 +232,33 @@ export const VIDEOS = {
   }
 };
 
+export const VIDEO_IDS = Object.keys(VIDEOS);
+export const TOTAL_DUR = VIDEO_IDS.reduce((a, id) => a + VIDEOS[id].dur, 0);
+
 export const UPCOMING = [
-  '05 · Quitar artículos y cancelar la venta', '07 · Agregar un cliente', '08 · Cliente y tipo de comprobante',
-  '09 · Arqueo y nota de crédito', '10 · Ingresos y retiros de dinero', '11 · Declarar un gasto',
-  '12 · Cobro de cuenta corriente', '13 · Opciones durante la venta', '14 · Reimprimir comprobantes',
-  '15 · Recargar artículos y clientes', '16 · Arqueo de caja'
+  '07 · Agregar un cliente', '08 · Cliente y tipo de comprobante', '09 · Arqueo y nota de crédito',
+  '10 · Ingresos y retiros de dinero', '11 · Declarar un gasto', '12 · Cobro de cuenta corriente',
+  '13 · Opciones durante la venta', '14 · Reimprimir comprobantes', '15 · Recargar artículos y clientes',
+  '16 · Arqueo de caja'
 ];
 
 export const videoSrc = id => `videos/${VIDEOS[id].file}.mp4`;
 export const posterSrc = id => `posters/${VIDEOS[id].file}.jpg`;
 
-/** Segundo en que termina el paso i (el comienzo del siguiente). */
+/** Segundo en que termina la frase i de la narración. */
 export const cueEnd = (id, i) => (i + 1 < VIDEOS[id].cues.length ? VIDEOS[id].cues[i + 1][0] : VIDEOS[id].dur);
 
-/** Índice del paso que se está narrando en el segundo t. */
-export function cueAt(id, t) {
-  const cues = VIDEOS[id].cues;
+/** Índice del último elemento [segundo, ...] que ya empezó en el segundo t. */
+export function indexAt(list, t, lead = 0.7) {
   let k = -1;
-  for (let i = 0; i < cues.length; i++) if (cues[i][0] <= t + 0.7) k = i;
+  for (let i = 0; i < list.length; i++) if (list[i][0] <= t + lead) k = i;
   return k;
 }
+export const cueAt = (id, t) => indexAt(VIDEOS[id].cues, t);
+export const chapterAt = (id, t) => indexAt(VIDEOS[id].chapters.map(c => [c.t]), t);
+
+/** Todos los pasos del video en orden, con su capítulo. */
+export const allSteps = id => VIDEOS[id].chapters.flatMap((c, ci) => c.steps.map(s => ({ t: s[0], text: s[1], spot: s[2], ci })));
+
+/** Videos donde aparece un punto del mapa (según el paso a paso). */
+export const videosForSpot = spot => VIDEO_IDS.filter(id => allSteps(id).some(s => s.spot === spot));

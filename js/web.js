@@ -1,9 +1,10 @@
-// Pestaña "Sistema web": menú de sistema.buhomanager.com y guía interactiva de Artículos.
+// Sistema Web (Plan Nube): grilla de módulos como portada (#web) y, al entrar a uno (#web-<id>),
+// el menú real de sistema.buhomanager.com con la guía del módulo.
 
 import { $, esc } from './utils.js';
-import { I } from './icons.js';
+import { I, line } from './icons.js';
 import { WEB, ART_MARKS, ART_ROWS } from './data/content.js';
-import { goVideo } from './router.js';
+import { goVideo, goWeb } from './router.js';
 
 let sel = { mod: 'articulos', sub: 'Artículos' };
 const open = new Set(['articulos']);
@@ -31,7 +32,7 @@ function articulosGuide() {
   return `<div class="card wd">
     <div class="insp-head"><span class="pill g-act">Gestión Artículos</span><span class="pill st-ok">Guía interactiva</span></div>
     <h2 class="wd-title">Artículos</h2>
-    <p class="desc">La lista de todos los artículos del comercio. Toque un número para ver qué hace cada parte de la pantalla.</p>
+    <p class="desc">La lista de todos los artículos del comercio. Tocá un número para ver qué hace cada parte de la pantalla.</p>
     <div class="art">
       <div class="ws-wrap"><div class="ws">
         <div class="ws-top">☰ BuhoManager</div><div class="ws-crumb">Artículos</div>
@@ -75,14 +76,38 @@ function render() {
   $('#webDetail').innerHTML = sel.sub === 'Artículos' ? articulosGuide() : s ? subPage(m, s) : modulePage(m);
 }
 
+function renderGrid() {
+  $('#mgrid').innerHTML = WEB.map(m => {
+    const guides = m.subs ? m.subs.filter(x => x[2]).length : 0;
+    return `<button type="button" class="mcard" data-mod="${m.id}" style="--tint:${m.tint}">
+      <span class="mic">${line(m.icon)}</span><h3>${esc(m.name)}</h3><p>${esc(m.desc)}</p>
+      <span class="foot"><span class="pill ${guides ? 'st-ok' : 'st-soon'}">${guides ? `${guides} guía interactiva` : 'Guía en preparación'}</span>${line('arrow')}</span>
+    </button>`;
+  }).join('');
+}
+
+/** Portada del Sistema Web: la grilla de módulos. */
+export function showWebHome() {
+  $('#webHome').hidden = false;
+  $('#webMod').hidden = true;
+}
+
+/** Entra a un módulo; sub elige una opción de su menú. */
 export function openWeb(mod, sub = null) {
+  const m = WEB.find(x => x.id === mod);
+  if (!m) return showWebHome();
   sel = { mod, sub };
   open.add(mod);
+  $('#webHome').hidden = true;
+  $('#webMod').hidden = false;
   render();
 }
 
 export function initWeb() {
+  renderGrid();
   render();
+  $('#mgrid').addEventListener('click', e => { const b = e.target.closest('[data-mod]'); if (b) goWeb(b.dataset.mod); });
+  $('#webBack').addEventListener('click', () => goWeb(null));
   $('#side').addEventListener('click', e => {
     const b = e.target.closest('[data-mod]');
     if (!b) return;
@@ -92,13 +117,13 @@ export function initWeb() {
       render();
       return;
     }
-    openWeb(id, sub);
+    goWeb(id, sub);
   });
   $('#webDetail').addEventListener('click', e => {
     const k = e.target.closest('[data-mk]');
     if (k) { mark = +k.dataset.mk; render(); return; }
     const sc = e.target.closest('.subcard');
-    if (sc) { openWeb(sc.dataset.mod, sc.dataset.sub); return; }
+    if (sc) { goWeb(sc.dataset.mod, sc.dataset.sub); return; }
     const gv = e.target.closest('[data-govideo]');
     if (gv) goVideo(gv.dataset.govideo, +gv.dataset.t);
   });

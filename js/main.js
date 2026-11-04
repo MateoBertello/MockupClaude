@@ -1,26 +1,30 @@
 // Punto de entrada: arma cada sección y conecta los atajos globales.
 
 import { $, $$ } from './utils.js';
-import { OWL, OWL_SMALL } from './icons.js';
+import { OWL, OWL_SMALL, line } from './icons.js';
 import { initCaja, handleCajaKey } from './caja/index.js';
-import { initVideos } from './videos.js';
+import { initLesson } from './lesson.js';
 import { initWeb } from './web.js';
 import { initCheat, openCheat, isCheatOpen, cheatKey } from './cheatsheet.js';
 import { initSearch, openSearch, isSearchOpen } from './search.js';
-import { initRouter } from './router.js';
+import { initRouter, goWeb } from './router.js';
 
 $$('[data-owl]').forEach(el => { el.innerHTML = OWL; });
 $$('[data-owl-small]').forEach(el => { el.innerHTML = OWL_SMALL; });
+$$('[data-line]').forEach(el => { el.outerHTML = line(el.dataset.line); });
 
 initCaja();
-initVideos();
+initLesson();
 initWeb();
 initCheat();
 initSearch();
 initRouter();
 
-$('#openSearch').addEventListener('click', openSearch);
+$$('[data-open-search]').forEach(b => b.addEventListener('click', () => openSearch()));
 $('#openCheat').addEventListener('click', openCheat);
+$('#cheatBanner').addEventListener('click', openCheat);
+$('#webBanner').addEventListener('click', () => goWeb(null));
+$('#heroChips').addEventListener('click', e => { const c = e.target.closest('[data-query]'); if (c) openSearch(c.dataset.query); });
 
 document.addEventListener('keydown', e => {
   if (isCheatOpen()) { cheatKey(e); return; }

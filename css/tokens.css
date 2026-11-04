@@ -1,5 +1,5 @@
 /* Tokens de color y tipografía. Tema claro en :root, oscuro por preferencia del sistema o data-theme. */
-/* Layout: guía de la Caja en vista dividida (mapa interactivo | inspector con video sincronizado), pestañas sin recarga arriba. */
+/* Layout: encabezado con selector Caja POS / Sistema Web, portada con buscador y secciones apiladas; la lección y el mapa usan vista dividida. */
 :root{
   /* Paleta oficial BuhoManager */
   --brand:#1E6B9B; --brand-deep:#0D4C73; --pos-gray:#E5E7EB; --keypad:#34495E; --bar:#1A1A1A;
@@ -8,6 +8,7 @@
   --bg:#F2F5F8; --surface:#FFFFFF; --surface-2:#EAF0F4; --fg:#10222E; --muted:#566874; --line:#D5DFE6;
   --accent-text:#1E6B9B; --orange-text:#9A5B00; --orange-soft:#FEF3DC; --warn-bg:#FBEDED; --warn-fg:#7A2727; --warn-line:#E7B9B9;
   --green-soft:#E3F3E6; --green-text:#1E6E2E; --blue-soft:#E2EEF7; --header:#0D4C73; --header-fg:#FFFFFF; --shadow:0 1px 2px rgba(13,76,115,.06),0 8px 24px rgba(13,76,115,.08);
+  --t-blue:#E4EEF8; --t-slate:#E8ECF1; --t-green:#E2F2EC; --t-amber:#FDF1DC; --t-violet:#ECE8F7; --t-teal:#DDF1F1; --t-rose:#FBEAEE; --hero:#E7EFF6;
   /* Réplica de la Caja: aspecto único, igual en ambos temas */
   --r-bg:#F6F6F6; --r-panel:#D6D6D6; --r-panel-line:#A9A9A9; --r-grid:#9DB3C8; --r-sel:#B9CFE5; --r-text:#141414; --r-muted:#8A8A8A; --r-white:#FFFFFF; --r-dlg:#EEEEEE; --r-dlg-head:#D8D8D8; --r-desc:#1F45C8; --r-digit:#22313F;
   --font-ui:"Plus Jakarta Sans","Segoe UI",system-ui,sans-serif;
@@ -19,6 +20,7 @@
     --bg:#0A1620; --surface:#10212E; --surface-2:#0D1B26; --fg:#E3ECF2; --muted:#93A7B5; --line:#203849;
     --accent-text:#74BBE6; --orange-text:#F8B547; --orange-soft:#33260E; --warn-bg:#2B1616; --warn-fg:#F2BDBD; --warn-line:#5A2C2C;
     --green-soft:#12301B; --green-text:#8FD69F; --blue-soft:#132E42; --header:#082F48; --header-fg:#FFFFFF; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+    --t-blue:#14283A; --t-slate:#1A232C; --t-green:#122C25; --t-amber:#2E2614; --t-violet:#221E33; --t-teal:#0F2B2D; --t-rose:#2D1820; --hero:#0D1E2B;
     color-scheme:dark;
   }
 }
@@ -26,5 +28,6 @@
   --bg:#0A1620; --surface:#10212E; --surface-2:#0D1B26; --fg:#E3ECF2; --muted:#93A7B5; --line:#203849;
   --accent-text:#74BBE6; --orange-text:#F8B547; --orange-soft:#33260E; --warn-bg:#2B1616; --warn-fg:#F2BDBD; --warn-line:#5A2C2C;
   --green-soft:#12301B; --green-text:#8FD69F; --blue-soft:#132E42; --header:#082F48; --header-fg:#FFFFFF; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  --t-blue:#14283A; --t-slate:#1A232C; --t-green:#122C25; --t-amber:#2E2614; --t-violet:#221E33; --t-teal:#0F2B2D; --t-rose:#2D1820; --hero:#0D1E2B;
   color-scheme:dark;
 }

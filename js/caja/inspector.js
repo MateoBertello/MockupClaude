@@ -40,10 +40,10 @@ export function renderInfo() {
   if (s.warn) h += `<div class="warn">${I.warn}<div><b>Regla clave.</b> ${esc(s.warn)}</div></div>`;
   if (s.tips.length) h += `<ul class="tips">${s.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
   if (S.mode === 'practice') {
-    const items = S.log.length ? S.log.map(l => `<li>${esc(l)}</li>`).join('') : '<li>Toque un botón de la réplica para practicar.</li>';
+    const items = S.log.length ? S.log.map(l => `<li>${esc(l)}</li>`).join('') : '<li>Tocá un botón de la réplica para practicar.</li>';
     h += `<div class="log"><h4>Lo que pasó en la Caja</h4><ol>${items}</ol></div>`;
   } else {
-    h += `<p class="hint">${S.preview ? 'Haga clic para fijarlo y reproducir el video en el momento exacto.' : 'Cambie a <b>Practicar</b> para probar este botón con una venta de ejemplo.'}</p>`;
+    h += `<p class="hint">${S.preview ? 'Hacé clic para fijarlo y ver el video en el momento exacto.' : 'Pasá a <b>Practicar</b> para probar este botón con una venta de ejemplo.'}</p>`;
   }
   infoEl.innerHTML = h + '</div>';
 }
