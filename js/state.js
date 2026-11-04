@@ -19,10 +19,23 @@ export const S = {
   returning: false,         // esperando el artículo de una devolución
   ctacte: false,            // en un cobro de cuenta corriente
   suspended: null,          // venta en espera (Suspender / Resumir)
+  session: newSession(true), // lo que registró la caja en el turno, para el arqueo
   dlg: null,                // ventana abierta dentro de la réplica
   pays: [],                 // pagos cargados en Pago detallado
   log: []                   // últimas acciones de práctica
 };
+
+/** Turno de caja. Con sample, arranca con movimientos de ejemplo del día. */
+export function newSession(sample = false) {
+  const now = new Date(), at = (h, m) => { const d = new Date(now); d.setHours(h, m, 0, 0); return d; };
+  return {
+    nro: 3,
+    byMedio: sample ? { Efectivo: 120000, 'Cta Cte': 0, 'T. Débito': 45000, 'T. Crédito': 30000, Transferencia: 15000, MercadoPago: 22000 } : { Efectivo: 0, 'Cta Cte': 0, 'T. Débito': 0, 'T. Crédito': 0, Transferencia: 0, MercadoPago: 0 },
+    cancelled: sample ? 1 : 0,
+    declared: null,
+    tickets: sample ? [{ at: at(11, 15), nro: 3028, total: 12000 }, { at: at(11, 38), nro: 3033, total: 18200 }, { at: at(12, 52), nro: 3040, total: 12000 }] : []
+  };
+}
 
 let uid = 10;
 export const nextId = () => ++uid;
@@ -56,7 +69,7 @@ export function clearSale() {
 }
 
 /** Pantalla del keymap en la que está la práctica. */
-export const keyState = () => (S.screen === 'cobro' ? 'cobro' : (S.rows.length || S.ctacte) ? 'venta' : 'libre');
+export const keyState = () => (S.screen === 'cobro' ? 'cobro' : S.screen === 'arqueo' ? 'otras' : (S.rows.length || S.ctacte) ? 'venta' : 'libre');
 export function resetSale() {
   clearSale();
   S.rows = sampleSale(); S.sel = 1;

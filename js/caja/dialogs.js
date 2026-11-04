@@ -5,7 +5,7 @@
 
 import { $, esc, money, fmtQty, norm, box, fs } from '../utils.js';
 import { CATALOG, MEDIOS, CUSTOMERS, MENU_OPTIONS, MENU_SALE } from '../data/content.js';
-import { S, totals, paid, addLog, selItem, nextId, clearSale, keyState } from '../state.js';
+import { S, totals, paid, addLog, selItem, nextId, clearSale, keyState, newSession } from '../state.js';
 import { addItem, refresh, mission } from './actions.js';
 
 const dlgEl = $('#rp-dlg');
@@ -74,6 +74,9 @@ const filtered = d => {
   const q = norm(d.q || '');
   if (d.k === 'productos') return CATALOG.filter(p => !q || norm(p[1]).includes(q) || p[0].startsWith(q));
   if (d.k === 'clientes') return customers.filter(c => !q || norm(c.name).includes(q) || c.doc.includes(q));
+  // Local: los del turno en esta caja. Servidor: también los de turnos anteriores.
+  if (d.k === 'reprint') return [...S.session.tickets].reverse().filter(t => !q || String(t.nro).includes(q));
+  if (d.k === 'reprintsrv') return [...(S.archive || []), ...S.session.tickets].reverse().filter(t => !q || String(t.nro).includes(q));
   return (keyState() === 'venta' ? MENU_SALE : MENU_OPTIONS).filter(o => !q || norm(o).includes(q));
 };
 function listRows(d) {
@@ -81,10 +84,24 @@ function listRows(d) {
   if (d.idx >= d.list.length) d.idx = 0;
   if (!d.list.length) return '<div class="rempty">Sin resultados.</div>';
   return d.list.map((x, i) => {
-    const cells = d.k === 'productos' ? [x[0], esc(x[1]), x[2].toFixed(1)] : d.k === 'clientes' ? [x.doc, esc(x.name)] : [esc(x)];
+    const cells = d.k === 'productos' ? [x[0], esc(x[1]), x[2].toFixed(1)]
+      : d.k === 'clientes' ? [x.doc, esc(x.name)]
+      : d.k === 'reprint' ? ['Ticket/Factura', stamp(x.at, true)]
+      : d.k === 'reprintsrv' ? [stamp(x.at, false), x.nro, 'Ticket', money(x.total)]
+      : [esc(x)];
     return `<div class="lrow ${d.k}${i === d.idx ? ' on' : ''}" data-act="pick" data-i="${i}">${cells.map(c => `<span>${c}</span>`).join('')}</div>`;
   }).join('');
 }
+
+const p2 = n => String(n).padStart(2, '0');
+/** Fecha de un comprobante: larga (2026/10/20 12:52:13) o corta (20/10 12:52). */
+const stamp = (d, long) => long
+  ? `${d.getFullYear()}/${p2(d.getMonth() + 1)}/${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`
+  : `${p2(d.getDate())}/${p2(d.getMonth() + 1)} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+const searchWin = (d, head) => {
+  const L = loc(680, 550);
+  return listWin({ W: 680, H: 550, bg: 'bg_generic_search', x: 180, y: 52, label: head, input: d.q, head: text(head, L(24, 123, 630, 32), 12, 'font-weight:700;justify-content:center'), list: listRows(d), listBox: [24, 156, 630, 255], ok: [155, 461, 180, 50], cancel: [345, 461, 180, 50] });
+};
 
 const VIEWS = {
   cantidad: () => form('Cantidad', [{ id: 'fQty', label: 'Cantidad', value: fmtQty(selItem().qty), num: true }]),
@@ -102,6 +119,9 @@ const VIEWS = {
   confirm: d => confirmWin(d.title || '', d.msg),
   aviso: d => confirmWin('Quitar renglón', d.msg, 'aviso-go'),
   info: d => confirmWin(d.title || '', d.msg, 'close', true),
+  cierre: () => form('Cierre', [{ id: 'fEfectivo', label: 'Ingrese Dinero en Efectivo', value: '', num: true }]),
+  reprint: d => searchWin(d, 'Comprobantes'),
+  reprintsrv: d => searchWin(d, 'Seleccione'),
   monto: d => form('', [{ id: 'fMontoCaja', label: 'Ingrese Monto', value: '', num: true }]),
   gasto: () => form('Declaracion de Gasto', [{ id: 'gConcepto', label: 'Concepto', options: ['Limpieza', 'Mantenimiento', 'Librería', 'Delivery', 'Otros'] }, { id: 'gMotivo', label: 'Motivo', value: '' }, { id: 'gMonto', label: 'Monto del gasto', value: '', num: true }]),
   dtotal: () => form('Descuento Total', [{ id: 'fVal', label: 'Valor', value: '10.0', num: true }, { id: 'fTipo', label: 'Tipo de descuento', options: ['Descuento Porcentual', 'Descuento Monto Fijo'] }]),
@@ -147,7 +167,12 @@ const fail = msg => { const e = $('#dErr'); if (e) e.textContent = msg; };
 const done = () => { closeDlg(); refresh(); };
 
 function finishSale(printed) {
-  const vuelto = paid() - totals().total;
+  const total = totals().total, vuelto = paid() - total;
+  // El turno registra lo cobrado por medio de pago (el vuelto sale del efectivo) y el comprobante.
+  S.pays.forEach(x => { S.session.byMedio[x.medio] = (S.session.byMedio[x.medio] || 0) + x.monto; });
+  if (vuelto > 0) S.session.byMedio.Efectivo -= vuelto;
+  const last = S.session.tickets[S.session.tickets.length - 1];
+  S.session.tickets.push({ at: new Date(), nro: (last ? last.nro : 3040) + 1, total });
   clearSale();
   mission('sale-done');
   addLog(`Venta registrada${printed ? ' e impresa' : ''}${vuelto > 0 ? ` · Vuelto ${money(vuelto)}` : ''}. La Caja vuelve a cero.`);
@@ -163,6 +188,7 @@ const HANDLERS = {
   monto(d) {
     const v = num('#fMontoCaja');
     if (!(v > 0)) return fail('Escribí un monto mayor que cero.');
+    S.session.byMedio.Efectivo += d.kind === 'in' ? v : -v;
     addLog(`${d.kind === 'in' ? 'Ingreso' : 'Retiro'} de dinero registrado: ${money(v)}.`);
     mission(d.kind === 'in' ? 'cash-in' : 'cash-out'); done();
   },
@@ -170,6 +196,7 @@ const HANDLERS = {
     const v = num('#gMonto');
     if (!val('#gMotivo')) return fail('Escribí el motivo del gasto.');
     if (!(v > 0)) return fail('Escribí el monto del gasto.');
+    S.session.byMedio.Efectivo -= v;
     addLog(`Gasto declarado: ${val('#gConcepto')} · ${money(v)}.`); mission('expense'); done();
   },
   dtotal() {
@@ -188,7 +215,8 @@ const HANDLERS = {
     S.sel = S.rows.length - 1; S.returning = false;
     addLog(`Devolución de ${d.p[1]}: el renglón queda en negativo · Total ${money(totals().total)}`); mission('return-item'); done();
   },
-  resumir() {
+  resumir(d) {
+    if (d.next === 'srv') { openDlg({ k: 'reprintsrv', q: '', idx: 0 }); return; }
     const s = S.suspended, today = new Date().toDateString();
     if (!s || s.day !== today || val('#rSuc') !== 'Sucursal 1') {
       openDlg({ k: 'info', title: 'Resumir Transaccion', msg: 'No hay ventas en espera para esa sucursal y fecha.' });
@@ -245,10 +273,18 @@ const HANDLERS = {
       S.sel = Math.max(0, Math.min(S.sel, S.rows.length - 1));
       addLog(`${x.t === 'd' ? 'Se quitó el descuento' : `Se quitó ${x.name}`} · Total ${money(totals().total)}`);
       mission(x.t === 'd' ? 'remove-discount' : 'remove-item');
-    } else if (d.run === 'cancelar') { clearSale(); addLog('Venta cancelada: carrito, cliente y factura vacíos.'); mission('cancel-sale'); }
+    } else if (d.run === 'cancelar') { clearSale(); S.session.cancelled++; addLog('Venta cancelada: carrito, cliente y factura vacíos.'); mission('cancel-sale'); }
     else if (d.run === 'limpiar') { S.pays = []; addLog('Se limpiaron los pagos.'); mission('clean-pays'); }
     else if (d.run === 'imprimir') return finishSale(true);
-    else if (d.run === 'arqueo') { mission('arqueo-open'); openDlg({ k: 'info', title: 'Arqueo Caja', msg: 'El arqueo de cajero tiene su propio video. En la práctica la Caja vuelve a la venta.' }); return; }
+    else if (d.run === 'arqueo') { mission('arqueo-open'); openDlg({ k: 'cierre' }); return; }
+    else if (d.run === 'eod') {
+      const nro = S.session.nro;
+      S.archive = [...(S.archive || []), ...S.session.tickets];
+      S.session = newSession(false); S.session.nro = nro + 1; S.screen = 'venta';
+      mission('eod');
+      openDlg({ k: 'info', title: 'Cierre Día', msg: 'Se cerraron el día y la sesión. El próximo turno empieza con una caja nueva.' });
+      return;
+    }
     else if (d.run === 'nc') { addLog('En la Caja real empieza la nota de crédito. Esta práctica no la emite.'); }
     done();
   },
@@ -271,6 +307,22 @@ const HANDLERS = {
     else { addLog(`Cliente asignado: ${c.name}.`); mission('client-set'); }
     done();
   },
+  cierre() {
+    const v = num('#fEfectivo');
+    if (!(v >= 0) || val('#fEfectivo') === '') return fail('Escribí el efectivo que contaste.');
+    S.session.declared = v; S.screen = 'arqueo';
+    addLog('Arqueo hecho. Revisá el balance: Monto, Declarado y Diferencia.'); mission('cierre'); done();
+  },
+  reprint(d) {
+    const t = d.list[d.idx]; if (!t) return;
+    mission('reprint-local');
+    openDlg({ k: 'info', title: 'Reimpresion Local', msg: `Se reimprime el comprobante del ${stamp(t.at, true)}. En la práctica no se imprime.` });
+  },
+  reprintsrv(d) {
+    const t = d.list[d.idx]; if (!t) return;
+    mission('reprint-server');
+    openDlg({ k: 'info', title: 'Reimpresion Server', msg: `Se reimprime el comprobante ${t.nro} por ${money(t.total)}. En la práctica no se imprime.` });
+  },
   menu(d) {
     const o = d.list[d.idx]; if (!o) return;
     closeDlg();
@@ -286,6 +338,7 @@ function closeCurrent() {
   if (d && d.k === 'monto') { openDlg({ k: 'info', msg: d.kind === 'in' ? 'No se realizo Fondo Fijo de Caja. Debe ingresar los datos solicitados para poder realizarlo.' : 'No se realizó el retiro de dinero.' }); return; }
   if (d && d.k === 'gasto') { openDlg({ k: 'info', msg: 'No se realizó la declaración de gasto.' }); return; }
   if (d && d.k === 'devprecio') S.returning = false;
+  if (d && d.k === 'info' && d.then) { const next = d.then; if (next.mission) mission(next.mission); openDlg({ k: 'info', title: next.title, msg: next.msg }); return; }
   closeDlg(); refresh();
 }
 
@@ -305,6 +358,11 @@ export function openFunction(name) {
     'Resumir Venta': () => st === 'libre' ? openDlg({ k: 'resumir' }) : false,
     'Descuento Total': () => st === 'venta' ? openDlg({ k: 'dtotal' }) : false,
     'Devolucion Articulo': () => { if (st !== 'venta' && st !== 'libre') return false; S.returning = true; addLog('La Caja espera el artículo a devolver: escaneá su código o buscalo con Productos.'); refresh(); },
+    'Reimpresion Local': () => st === 'libre' ? openDlg({ k: 'reprint', q: '', idx: 0 }) : false,
+    'Reimpresion Server': () => st === 'libre' ? openDlg({ k: 'resumir', next: 'srv' }) : false,
+    'Recargar Articulos': () => { if (st !== 'libre') return false; mission('reload-items'); openDlg({ k: 'info', msg: 'Se comenzo proceso de recarga de articulos. Este proceso puede demorar unos minutos.' }); },
+    'Recargar Clientes': () => st === 'libre' ? openDlg({ k: 'info', msg: 'Descargando el padrón de clientes.', then: { msg: 'Padron de clientes actualizado, 48 registros.', mission: 'reload-clients' } }) : false,
+    'Imprimir Ticket': () => { const t = S.session.tickets[S.session.tickets.length - 1]; openDlg({ k: 'info', title: 'Imprimir Ticket', msg: t ? `Se reimprime el último ticket (${t.nro}). En la práctica no se imprime.` : 'No hay tickets en este turno.' }); },
     'Suspender Venta': () => {
       if (st !== 'venta') return false;
       S.suspended = { rows: S.rows, client: S.client, fact: S.fact, comprobante: S.comprobante, day: new Date().toDateString() };
@@ -333,6 +391,12 @@ export function tenderAction(a, el) {
   if (a === 'limpiar') { if (S.pays.length) openDlg({ k: 'confirm', title: 'Limpiar', msg: '¿Desea borrar todos los pagos de la lista?', run: 'limpiar' }); return; }
   if (a === 'volver') { S.pays = []; S.screen = 'venta'; addLog('Volviste a la venta sin cobrar.'); refresh(); return; }
   if (a === 'cancelar-venta') { openDlg({ k: 'confirm', title: 'Cancelar', msg: '¿Desea cancelar la transacción?', run: 'cancelar' }); return; }
+  if (a === 'finalizar') {
+    S.screen = 'venta'; S.session.declared = null;
+    openDlg({ k: 'info', title: 'Finalizar', msg: 'Se cerró la sesión. La caja sigue abierta para el próximo turno.' });
+    return;
+  }
+  if (a === 'eod') { openDlg({ k: 'confirm', title: 'Cierre Día', msg: '¿Desea realizar el Cierre de Día?', run: 'eod' }); return; }
   if (a === 'pd-pagar') {
     if (p < t) { addLog(`Todavía falta cobrar ${money(t - p)}.`); refresh(); return; }
     openDlg({ k: 'confirm', title: 'Imprimir', msg: '¿Desea imprimir el comprobante?', run: 'imprimir' });

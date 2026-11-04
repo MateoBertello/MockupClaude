@@ -172,9 +172,32 @@ function tenderScreen() {
   return h;
 }
 
+/* ---------- Balance del arqueo (cashierbalancexDesign.xml) ---------- */
+function arqueoScreen() {
+  const ss = S.session, d = new Date(), p = n => String(n).padStart(2, '0');
+  const efectivo = ss.byMedio.Efectivo, decl = ss.declared ?? 0, diff = decl - efectivo;
+  let h = img('bg/back.png', [0, 0, 1040, 655]);
+  h += `<div class="ri" style="${box(984, 10, 34, 30)}">${I.wifi}</div>`;
+  h += lbl(`${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`, [30, 3, 180, 40], { f: 16, bold: true });
+  h += lbl('Operador: cajero1', [30, 28, 180, 40], { f: 16 }) + lbl('Sucursal: 1', [30, 53, 180, 40], { f: 16 }) + lbl('Terminal: 1', [30, 78, 180, 40], { f: 16 });
+  h += lbl('Arqueo de Caja', [380, 49, 220, 40], { f: 20, bold: true, align: 'flex-end' }) + lbl(`N${ss.nro}`, [612, 45, 100, 40], { f: 30, bold: true });
+  const row = (a, b = '', c = '', e = '', cls = '') => `<div class="brow ${cls}"><span>${a}</span><span>${b}</span><span>${c}</span><span>${e}</span></div>`;
+  const names = [['Efectivo', 'Efectivo'], ['CTA CTE', 'Cta Cte'], ['Debito', 'T. Débito'], ['Credito', 'T. Crédito'], ['Transferencia', 'Transferencia'], ['MercadoPago', 'MercadoPago']];
+  let rows = row('Medios de Pago', 'Monto', 'Declarado', 'Diferencia', 'hd');
+  names.forEach(([label, key], i) => {
+    rows += i === 0 ? row(label, money(efectivo), money(decl), money(diff), diff ? 'diff' : '') : row(label, money(ss.byMedio[key] || 0));
+  });
+  rows += row('') + row('Transacciones Canceladas', String(ss.cancelled));
+  for (let i = 0; i < 12; i++) rows += row('', '', '', '', 'empty');
+  h += `<div class="rbal" style="${box(220, 90, 760, 500)}">${rows}</div>`;
+  h += actBtn('finalizar', 'btn_Finalizar', [20, 130, 180, 50], 'aria-label="Finalizar (Espacio)"');
+  h += actBtn('eod', 'btn_Cierre_Dia', [20, 190, 180, 50], 'aria-label="Cierre Día (C)"');
+  return h;
+}
+
 export function renderBase() {
   const keepFocus = document.activeElement && document.activeElement.id === 'rpCode';
-  base.innerHTML = S.screen === 'cobro' ? tenderScreen() : saleScreen();
+  base.innerHTML = S.screen === 'cobro' ? tenderScreen() : S.screen === 'arqueo' ? arqueoScreen() : saleScreen();
   pos.dataset.screen = S.screen;
   tick();
   renderDots();
@@ -182,7 +205,7 @@ export function renderBase() {
 }
 
 export function renderDots() {
-  pos.classList.toggle('nodots', !S.dots || S.screen === 'cobro');
+  pos.classList.toggle('nodots', !S.dots || S.screen !== 'venta');
   dotsEl.innerHTML = SPOT_IDS.map(id => {
     const [x, y, w] = SPOTS[id].box;
     const small = w < 30;

@@ -6,9 +6,9 @@ Fusiona dos propuestas: de MockupChatGPT toma el selector Caja POS / Sistema Web
 
 ## Recorrido
 
-- **Caja POS** (`#caja`): portada con buscador, el selector Caja POS / Sistema Web y la ruta unida a la Caja de práctica (`#ruta`, `#punto-<id>`): 13 pasos, cada uno con su video y misiones que se tildan solas al hacerlas en la Caja. Después, accesos directos y respuestas rápidas.
+- **Caja POS** (`#caja`): portada con buscador, el selector Caja POS / Sistema Web y la ruta unida a la Caja de práctica (`#ruta`, `#punto-<id>`): 16 pasos, cada uno con su video y misiones que se tildan solas al hacerlas en la Caja. Después, accesos directos y respuestas rápidas.
 - **Caja de práctica**: réplica con la piel real de la Caja (`assets/caja`, de `light_small`) y las medidas de sus archivos `designx` (venta, cobro, búsquedas y ventanas). En Practicar responden los botones y las teclas reales del keymap.
-- **Lección** (`#video-01` … `#video-13`): video, capítulos, paso a paso que se marca solo, la narración literal desplegable, "Ver en la Caja" en cada paso y "Probalo en la Caja" al final.
+- **Lección** (`#video-01` … `#video-16`): video, capítulos, paso a paso que se marca solo, la narración literal desplegable, "Ver en la Caja" en cada paso y "Probalo en la Caja" al final.
 - **Sistema Web** (`#web`, `#web-<módulo>`): grilla de los 12 módulos y, al entrar, el menú real con la guía del módulo.
 
 ## Estructura
@@ -48,7 +48,7 @@ js/
     inspector.js        Panel lateral del mapa
     player.js           Video sincronizado del panel lateral
 assets/caja/            Imágenes reales de la Caja (fondos y botones de light_small)
-videos/                 Tutoriales 01 a 13 en 720p
+videos/                 Tutoriales 01 a 16 en 720p
 posters/                Portadas de los videos
 ```
 

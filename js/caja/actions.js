@@ -95,6 +95,7 @@ export function act(id, opts = {}) {
   if (id === 'codigo') { const c = $('#rpCode'); if (c) c.focus(); return; }
   const fn = ACTIONS[id];
   if (!fn) return;
+  if (S.screen === 'arqueo') { addLog('Estás en el balance del arqueo. Usá Finalizar (Espacio) o Cierre Día (C).'); refresh(); return; }
   if (S.screen === 'cobro' && !IN_TENDER.has(id)) { addLog('Estás en Pago detallado. Volvé a la venta con Volver o Esc.'); refresh(); return; }
   const r = selItem();
   if (NEEDS_ITEM.has(id) && !r) addLog('Primero seleccioná el renglón de un artículo.');
@@ -117,9 +118,10 @@ const KEY_ACTIONS = {
 const TENDER_KEYS = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
 /* Teclas que abren funciones del menú, por pantalla. */
 const FUNC_KEYS = {
-  venta: { F: 'Ingreso Dinero', R: 'Retiro Dinero', A: 'Arqueo Caja', 'CTRL+G': 'Gastos', D: 'Descuento Total', 'CTRL+D': 'Devolucion Articulo', J: 'Suspender Venta' },
-  libre: { F: 'Ingreso Dinero', R: 'Retiro Dinero', A: 'Arqueo Caja', 'CTRL+G': 'Gastos', 'CTRL+A': 'Agregar cliente', 'CTRL+C': 'Cobro Cta Cte', N: 'Nota Credito Libre', J: 'Resumir Venta', Z: 'Factura Electronica' },
-  cobro: {}
+  venta: { F: 'Ingreso Dinero', R: 'Retiro Dinero', A: 'Arqueo Caja', 'CTRL+G': 'Gastos', D: 'Descuento Total', 'CTRL+D': 'Devolucion Articulo', J: 'Suspender Venta', I: 'Imprimir Ticket' },
+  libre: { F: 'Ingreso Dinero', R: 'Retiro Dinero', A: 'Arqueo Caja', 'CTRL+G': 'Gastos', 'CTRL+A': 'Agregar cliente', 'CTRL+C': 'Cobro Cta Cte', N: 'Nota Credito Libre', J: 'Resumir Venta', Z: 'Factura Electronica', D: 'Reimpresion Local', 'CTRL+D': 'Reimpresion Server', 'CTRL+Q': 'Recargar Articulos', 'CTRL+L': 'Recargar Clientes', I: 'Imprimir Ticket' },
+  cobro: {},
+  otras: {}
 };
 
 /**
@@ -141,9 +143,13 @@ export function practiceKey(combo) {
     if (combo === 'L') { tenderAction('limpiar'); return { handled: true }; }
     if (combo === 'F') { tenderAction('cancelar-venta'); return { handled: true }; }
   }
+  if (state === 'otras') {
+    if (combo === 'Espacio') { tenderAction('finalizar'); return { handled: true }; }
+    if (combo === 'C') { tenderAction('eod'); return { handled: true }; }
+  }
   const fnName = FUNC_KEYS[state][combo];
   if (fnName && openFunction(fnName)) { pin('menu', { video: false }); renderInfo(); return { handled: true, spot: 'menu' }; }
-  const mapped = KEY_ACTIONS[state][combo];
+  const mapped = (KEY_ACTIONS[state] || {})[combo];
   if (mapped) {
     const [id, opts] = mapped;
     pin(id, { video: false });

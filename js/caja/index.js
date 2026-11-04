@@ -29,6 +29,7 @@ export function setMode(mode) {
 
 function renderStatic() {
   $('#soon').innerHTML = '<span class="lbl">Próximamente</span>' + UPCOMING.map(u => `<span class="pill st-soon">${esc(u)}</span>`).join('');
+  $('#soon').hidden = !UPCOMING.length;
   $('#tasks').innerHTML = TASKS.map((t, i) =>
     `<button type="button" class="task" data-task="${i}"><span class="tile">${line(t.icon)}</span><span><b>${esc(t.title)}</b><small>${esc(t.sub)}</small></span>${line('arrow')}</button>`).join('');
   $('#qgrid').innerHTML = QUICK.map((x, i) =>

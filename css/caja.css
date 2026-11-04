@@ -74,6 +74,9 @@
 .lrow.productos{grid-template-columns:126fr 500fr 120fr}
 .lrow.clientes{grid-template-columns:120fr 424fr}
 .lrow.menu{grid-template-columns:1fr}
+.lrow.reprint{grid-template-columns:1fr 1fr}
+.lrow.reprintsrv{grid-template-columns:110fr 90fr 120fr 110fr}
+.lrow.reprintsrv span:last-child{text-align:right}
 .lrow span{padding:.25cqw .5cqw;border-right:.1cqw solid #D7D7D7;white-space:nowrap;overflow:hidden}
 .lrow span:last-child{border-right:0}
 .lrow.productos span:last-child{text-align:right}
@@ -136,3 +139,12 @@
 /* Barra de título de la ventana */
 .win-ic{display:flex;width:15px;height:15px;flex:none}
 .win-ic svg{width:100%;height:100%}
+
+/* Balance del arqueo */
+.rbal{position:absolute;background:#fff;border:.1cqw solid #B5B5B5;overflow:hidden;padding:.8cqw 1.6cqw}
+.brow{display:grid;grid-template-columns:200fr 70fr 70fr 70fr;font-size:1.05cqw;height:1.75cqw;align-items:center;font-weight:700}
+.brow span:not(:first-child){padding-left:.4cqw}
+.brow.hd{font-size:1.45cqw;height:2.6cqw}
+.brow.diff span:last-child{color:#B11}
+.brow.empty{border-bottom:.1cqw solid #EEE}
+.brow:nth-child(even):not(.hd){background:#FAFAFA}

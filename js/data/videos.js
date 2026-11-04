@@ -507,11 +507,129 @@ VIDEOS['13'] = {
   ]
 };
 
+VIDEOS['14'] = {
+  file: '14-reimprimir', title: 'Reimprimir comprobantes', dur: 59.6,
+  category: 'Comprobantes', tint: 'var(--t-slate)',
+  desc: 'Volvé a imprimir un ticket de esta caja o uno guardado en el servidor.',
+  tip: 'Con la Caja sin venta, D abre la reimpresión local y CTRL+D la del servidor.',
+  practice: 'menu',
+  missions: [['reprint-local', 'Reimprimí un comprobante de esta caja (D, sin venta)'], ['reprint-server', 'Buscá un comprobante en el servidor (CTRL+D, sin venta)']],
+  chapters: [
+    { t: 0, title: 'Reimpresion Local', steps: [
+      [4.5, 'Abrí el menú y buscá Reimpresión Local. Se abre directo con la tecla D.', 'menu'],
+      [10.5, 'Muestra los comprobantes emitidos en esta caja, cada uno con su fecha y su hora.', null],
+      [22.5, 'Elegí uno y presioná Aceptar para imprimirlo otra vez, o cerrá con Cancelar.', null]
+    ] },
+    { t: 30, title: 'Reimpresion Server', steps: [
+      [30, 'Reimpresión Server busca los comprobantes guardados en el servidor. Abrila desde el menú o con CTRL+D.', 'menu'],
+      [34.5, 'Primero pide la sucursal y la fecha. Elegilas y presioná Aceptar.', null],
+      [48, 'La lista muestra cada comprobante con su número, su tipo y su importe. Elegí uno para reimprimirlo.', null]
+    ] }
+  ],
+  cues: [
+    [0, '¿El cliente pide otra copia del ticket? Se puede reimprimir.'],
+    [4.5, 'Vaya al menú.'],
+    [7.5, 'Busque *Reimpresion Local*.'],
+    [10.5, 'Muestra los comprobantes emitidos en esta caja.'],
+    [13.5, 'Se abre directo con la letra D.'],
+    [15, 'Márquela y haga clic en *Aceptar*.'],
+    [18, 'La lista trae cada comprobante con su fecha y su hora.'],
+    [22.5, 'Elija uno y presione *Aceptar* para imprimirlo otra vez.'],
+    [27, 'En este ejemplo se cierra con *Cancelar* sin imprimir.'],
+    [30, '*Reimpresion Server* busca los comprobantes guardados en el servidor.'],
+    [34.5, 'Ábrala desde el menú o con Control D. Primero pide la sucursal y la fecha.'],
+    [42, 'Elija la sucursal y revise la fecha.'],
+    [45, 'Presione *Aceptar*.'],
+    [48, 'La lista muestra cada comprobante con su número y su tipo.'],
+    [52.5, 'También su importe.'],
+    [54, 'Elija uno para reimprimirlo. O cierre con *Cancelar*.']
+  ]
+};
+
+VIDEOS['15'] = {
+  file: '15-recargar', title: 'Recargar artículos y clientes', dur: 54.4,
+  category: 'Mantenimiento', tint: 'var(--t-green)',
+  desc: 'Traé a la Caja los precios, artículos y clientes nuevos.',
+  tip: 'Si cambiaste precios en el Sistema Web, recargá los artículos antes de empezar a vender.',
+  practice: 'menu',
+  missions: [['reload-items', 'Recargá los artículos (CTRL+Q, sin venta)'], ['reload-clients', 'Recargá los clientes (CTRL+L, sin venta)']],
+  chapters: [
+    { t: 0, title: 'Recargar Articulos', steps: [
+      [0, 'Cuando cambian precios o llegan artículos nuevos, conviene recargar los datos de la Caja.', null],
+      [6, 'Entrá al menú y escribí "recargar". La opción es Recargar Artículos y su atajo es CTRL+Q.', 'menu'],
+      [24, 'La Caja avisa que empezó la recarga: puede demorar unos minutos. Aceptar cierra el aviso.', null]
+    ] },
+    { t: 31.5, title: 'Recargar Clientes', steps: [
+      [31.5, 'Recargar Clientes actualiza el padrón de clientes. CTRL+L hace lo mismo.', 'menu'],
+      [43.5, 'Primero avisa que está descargando el padrón y, al terminar, cuántos clientes se actualizaron.', null]
+    ] }
+  ],
+  cues: [
+    [0, 'Cuando cambian precios o llegan artículos nuevos conviene recargar los datos de la caja.'],
+    [6, 'Entre al menú.'],
+    [9, 'Escriba recargar en el filtro.'],
+    [13.5, 'La opción es *Recargar Articulos* y su atajo es Control Q.'],
+    [19.5, 'Selecciónelo y confirme con *Aceptar*.'],
+    [24, 'La caja avisa que comenzó la recarga. El proceso puede demorar unos minutos.'],
+    [28.5, 'Presione *Aceptar* para cerrar el aviso.'],
+    [31.5, '*Recargar Clientes* actualiza el padrón de clientes.'],
+    [36, 'Control L hace lo mismo.'],
+    [37.5, 'Búsquelo en el menú y presione *Aceptar*.'],
+    [43.5, 'Primero avisa que está descargando el padrón.'],
+    [46.5, 'Presione *Aceptar*.'],
+    [49.5, 'Al terminar la caja informa cuántos clientes se actualizaron.']
+  ]
+};
+
+VIDEOS['16'] = {
+  file: '16-arqueo', title: 'Arqueo de caja', dur: 74.1,
+  category: 'Fin del turno', tint: 'var(--t-amber)',
+  desc: 'Contá el efectivo, revisá el balance y cerrá el día.',
+  tip: 'Finalizar cierra tu sesión y deja la caja abierta para el próximo turno. Cierre Día cierra la caja del día.',
+  practice: 'menu',
+  missions: [['cierre', 'Hacé el arqueo: declará el efectivo contado (A)'], ['eod', 'Cerrá el día con Cierre Día (C)']],
+  chapters: [
+    { t: 0, title: 'Arqueo Caja', steps: [
+      [3, 'Al terminar el turno abrí el menú y escribí "arqueo", o usá la tecla A.', 'menu'],
+      [12, 'Elegí Arqueo Caja y confirmá con Aceptar cuando pregunte si querés hacer el arqueo de cajero.', null],
+      [22.5, 'En la ventana Cierre escribí el efectivo que contaste en la caja y presioná Aceptar.', null]
+    ] },
+    { t: 30, title: 'Balance y Cierre Día', steps: [
+      [30, 'Aparece el balance del arqueo: arriba la fecha, el operador, la sucursal y la terminal.', null],
+      [36, 'En Efectivo, Monto es lo que registró el sistema, Declarado lo que contaste y Diferencia cuánto sobra o falta.', null],
+      [48, 'Debajo están los demás medios de pago y al final las transacciones canceladas.', null],
+      [57, 'Finalizar cierra la sesión pero deja la caja abierta.', null],
+      [61.5, 'Cierre Día cierra la caja del día después de confirmar. El próximo turno empieza con una caja nueva.', null]
+    ] }
+  ],
+  cues: [
+    [0, 'Al terminar el turno se hace el arqueo de caja.'],
+    [3, 'Abra el menú de tres rayas.'],
+    [7.5, 'Escriba arqueo en el filtro. También puede usar la letra A.'],
+    [12, 'Elija *Arqueo Caja* y presione *Aceptar*.'],
+    [16.5, 'La caja pregunta si desea realizar el arqueo de cajero.'],
+    [19.5, 'Confirme con *Aceptar*.'],
+    [22.5, 'Se abre la ventana *Cierre*.'],
+    [24, 'Escriba el dinero en efectivo que contó en la caja.'],
+    [27, 'Después presione *Aceptar*.'],
+    [30, 'Aparece el balance del arqueo. Arriba figuran la fecha y el operador.'],
+    [36, 'En la fila de *Efectivo* la columna *Monto* muestra lo que registró el sistema.'],
+    [40.5, '*Declarado* es lo que usted contó.'],
+    [43.5, '*Diferencia* indica cuánto sobra o cuánto falta.'],
+    [48, 'Debajo aparecen los demás medios de pago. Cada uno con su propio monto.'],
+    [54, 'Al final se cuentan las transacciones canceladas.'],
+    [57, '*Finalizar* cierra la sesión pero deja la caja abierta.'],
+    [61.5, '*Cierre Día* cierra la caja del día. Antes de hacerlo pide una confirmación.'],
+    [67.5, 'Al aceptar se cierran el día y la sesión.'],
+    [70.5, 'El próximo turno empieza con una caja nueva.']
+  ]
+};
+
 // Ordenadas a mano: JavaScript pone primero las claves que parecen números ("10" a "13").
 export const VIDEO_IDS = Object.keys(VIDEOS).sort();
 export const TOTAL_DUR = VIDEO_IDS.reduce((a, id) => a + VIDEOS[id].dur, 0);
 
-export const UPCOMING = ['14 · Reimprimir comprobantes', '15 · Recargar artículos y clientes', '16 · Arqueo de caja'];
+export const UPCOMING = [];
 
 export const videoSrc = id => `videos/${VIDEOS[id].file}.mp4`;
 export const posterSrc = id => `posters/${VIDEOS[id].file}.jpg`;
