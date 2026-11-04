@@ -26,10 +26,6 @@
       <span class="brand-mark" data-owl></span>
       <div><b>BuhoManager</b><span>Centro de Ayuda</span></div>
     </a>
-    <nav class="envs" aria-label="Elegí qué querés aprender">
-      <button type="button" data-env="pos" aria-pressed="true"><span data-line="monitor"></span><span><b>Caja POS</b><small>Escritorio</small></span></button>
-      <button type="button" data-env="web" aria-pressed="false"><span data-line="cloud"></span><span><b>Sistema Web</b><small>Plan Nube</small></span></button>
-    </nav>
     <div class="top-tools">
       <button class="iconbtn" type="button" data-open-search aria-label="Buscar en la ayuda"><span data-line="search"></span><kbd>Ctrl K</kbd></button>
       <button class="iconbtn" type="button" id="openCheat" aria-label="Atajos de teclado"><span data-line="keyboard"></span><kbd>?</kbd></button>
@@ -49,55 +45,44 @@
   </div>
 </section>
 
+<nav class="wrap envs-wrap" id="envs" aria-label="Elegí qué querés aprender">
+      <div class="envs">
+      <button type="button" data-env="pos" aria-pressed="true"><span data-line="monitor"></span><span><b>Caja POS</b><small>Escritorio</small></span></button>
+      <button type="button" data-env="web" aria-pressed="false"><span data-line="cloud"></span><span><b>Sistema Web</b><small>Plan Nube</small></span></button>
+      </div>
+    </nav>
+
 <main class="wrap" id="contenido" tabindex="-1">
 
   <!-- ===================== CAJA POS ===================== -->
   <div id="view-caja" class="view">
 
-    <!-- Ruta de videos -->
-    <section class="sec" id="sec-ruta" aria-labelledby="rutaTitle">
-      <div class="sec-h">
-        <div><p class="eyebrow">Ruta recomendada</p><h2 id="rutaTitle">Dominá la Caja en 6 videos</h2><p>Cortos, narrados y con el paso a paso al lado. Arrancá por el primero o elegí el que necesites.</p></div>
-      </div>
-      <div class="route card">
-        <span class="tile" data-line="route"></span>
-        <div class="route-txt"><b>Tu progreso</b><small id="routeMeta">6 videos</small></div>
-        <div class="route-prog">
-          <div class="route-cap"><span id="routeCount">0 de 6 vistos</span></div>
-          <div class="route-bar" id="routeBar" role="progressbar" aria-label="Videos vistos" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0"><i id="routeFill"></i></div>
-        </div>
-        <button type="button" class="btn btn-primary" id="routeStart">Empezar la ruta</button>
-      </div>
-      <div class="vgrid" id="vgrid"></div>
-      <div class="soon" id="soon"></div>
-    </section>
-
-    <!-- Accesos directos -->
-    <section class="sec" aria-labelledby="tasksTitle">
-      <div class="sec-h"><div><h2 id="tasksTitle">Directo a lo que necesitás</h2><p>Cada acceso te lleva al capítulo justo del video.</p></div></div>
-      <div class="tasks" id="tasks"></div>
-    </section>
-
-    <!-- Mapa interactivo -->
-    <section class="sec" id="sec-mapa" aria-labelledby="mapaTitle">
+    <!-- Ruta + Caja de práctica: una sola sección -->
+    <section class="sec learn" id="sec-ruta" aria-labelledby="rutaTitle">
       <div class="sec-h">
         <div>
-          <p class="eyebrow">Caja de práctica · <span id="cnt-spots">19</span> puntos</p>
-          <h2 id="mapaTitle">Tocá la Caja</h2>
-          <p>Pasá el cursor por cualquier botón y el panel te explica qué hace, su atajo y el momento del video donde se ve. En <b>Practicar</b> los botones funcionan con una venta de ejemplo.</p>
+          <p class="eyebrow">Ruta recomendada · <span id="routeMeta">13 pasos</span></p>
+          <h2 id="rutaTitle">Aprendé la Caja haciendo</h2>
+          <p>Cada paso tiene un video corto y misiones para hacer en la Caja de práctica. Se tildan solas cuando las cumplís.</p>
         </div>
-        <div class="controls">
-          <div class="seg" role="group" aria-label="Modo del mapa">
-            <button type="button" data-mode="explore" aria-pressed="true">Explorar</button>
-            <button type="button" data-mode="practice" aria-pressed="false">Practicar</button>
-          </div>
-          <label class="chk"><input type="checkbox" id="dotsToggle" checked> Puntos</label>
-          <span class="prog" title="Puntos explorados"><span id="progTxt">0 de 19</span><span class="bar"><i id="progBar"></i></span></span>
+        <div class="route-prog" aria-live="polite">
+          <div class="route-cap"><b id="routeCount">0 de 13 pasos</b><span id="routeParts"></span></div>
+          <div class="route-bar" id="routeBar" role="progressbar" aria-label="Progreso de la ruta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="routeFill"></i></div>
         </div>
       </div>
 
-      <div class="split">
+      <ol class="stepper" id="stepper" aria-label="Pasos de la ruta"></ol>
+
+      <div class="split" id="sec-mapa">
         <div class="stage">
+          <div class="stage-top">
+            <div class="seg" role="group" aria-label="Modo de la Caja">
+              <button type="button" data-mode="explore" aria-pressed="true">Explorar</button>
+              <button type="button" data-mode="practice" aria-pressed="false">Practicar</button>
+            </div>
+            <span class="stage-hint" id="stageHint">Pasá el cursor por un botón para ver qué hace.</span>
+            <label class="chk"><input type="checkbox" id="dotsToggle" checked> Puntos <span class="muted tnum" id="progTxt"></span></label>
+          </div>
           <div class="win">
             <div class="win-bar">
               <span class="win-ic" data-owl-small></span>
@@ -123,6 +108,7 @@
         </div>
 
         <aside class="insp card" id="insp" aria-live="polite">
+          <div id="stepCard"></div>
           <div id="insp-info"></div>
           <div class="vid">
             <div class="vid-top"><span class="vid-label" id="vidLabel">Video</span><span class="pill st-warn" id="vidSeg">—</span></div>
@@ -135,6 +121,13 @@
           </div>
         </aside>
       </div>
+      <div class="soon" id="soon"></div>
+    </section>
+
+    <!-- Accesos directos -->
+    <section class="sec" aria-labelledby="tasksTitle">
+      <div class="sec-h"><div><h2 id="tasksTitle">Directo a lo que necesitás</h2><p>Cada acceso te lleva al capítulo justo del video.</p></div></div>
+      <div class="tasks" id="tasks"></div>
     </section>
 
     <!-- Respuestas rápidas -->

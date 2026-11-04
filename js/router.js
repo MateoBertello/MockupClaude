@@ -10,6 +10,7 @@ import { pin } from './caja/inspector.js';
 import { spotEl } from './caja/replica.js';
 import { pausePlayer } from './caja/player.js';
 import { setMode } from './caja/index.js';
+import { selectStep } from './caja/route.js';
 import { openLesson, pauseLesson } from './lesson.js';
 import { openWeb, showWebHome } from './web.js';
 import { openCheat, flashShortcut } from './cheatsheet.js';
@@ -39,7 +40,7 @@ function setHash(h) {
 
 function setEnv(next) {
   env = next;
-  $$('.envs [data-env]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.env === env)));
+  $$('#envs [data-env]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.env === env)));
   const h = HERO[env];
   $('#heroEyebrow').textContent = h.eyebrow;
   $('#heroTitle').innerHTML = h.title;
@@ -52,6 +53,7 @@ function setEnv(next) {
 function show(view, { hero = view !== 'video' } = {}) {
   VIEWS.forEach(v => { $('#view-' + v).hidden = v !== view; });
   $('#hero').hidden = !hero;
+  $('#envs').hidden = view === 'video';
   setEnv(view === 'web' ? 'web' : 'pos');
   if (view !== 'video') pauseLesson();
   if (view !== 'caja') pausePlayer();
@@ -73,6 +75,15 @@ export function goSpot(id, opts = {}) {
   pin(id);
   flash(spotEl(id));
   $('#pos').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/** Abre un paso de la ruta en la Caja de práctica, listo para hacer sus misiones. */
+export function goStep(id) {
+  setHash('ruta');
+  show('caja');
+  selectStep(id);
+  setMode('practice');
+  requestAnimationFrame(() => $('#sec-ruta').scrollIntoView({ behavior: 'smooth', block: 'start' }));
 }
 
 export function goVideo(id, t = 0) {
@@ -115,7 +126,7 @@ function route() {
 }
 
 export function initRouter() {
-  $$('.envs [data-env]').forEach(b => b.addEventListener('click', () => {
+  $$('#envs [data-env]').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.env === 'web') goWeb(null); else goHome();
   }));
   window.addEventListener('hashchange', route);

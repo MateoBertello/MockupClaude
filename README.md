@@ -6,9 +6,9 @@ Fusiona dos propuestas: de MockupChatGPT toma el selector Caja POS / Sistema Web
 
 ## Recorrido
 
-- **Caja POS** (`#caja`): portada con buscador, ruta de los videos 01 a 08 con progreso, accesos directos, la Caja de práctica (`#mapa`, `#punto-<id>`) y respuestas rápidas.
+- **Caja POS** (`#caja`): portada con buscador, el selector Caja POS / Sistema Web y la ruta unida a la Caja de práctica (`#ruta`, `#punto-<id>`): 13 pasos, cada uno con su video y misiones que se tildan solas al hacerlas en la Caja. Después, accesos directos y respuestas rápidas.
 - **Caja de práctica**: réplica con la piel real de la Caja (`assets/caja`, de `light_small`) y las medidas de sus archivos `designx` (venta, cobro, búsquedas y ventanas). En Practicar responden los botones y las teclas reales del keymap.
-- **Lección** (`#video-01` … `#video-08`): video, capítulos, paso a paso que se marca solo, la narración literal desplegable, "Ver en la Caja" en cada paso y "Probalo en la Caja" al final.
+- **Lección** (`#video-01` … `#video-13`): video, capítulos, paso a paso que se marca solo, la narración literal desplegable, "Ver en la Caja" en cada paso y "Probalo en la Caja" al final.
 - **Sistema Web** (`#web`, `#web-<módulo>`): grilla de los 12 módulos y, al entrar, el menú real con la guía del módulo.
 
 ## Estructura
@@ -27,7 +27,7 @@ js/
   main.js               Punto de entrada y teclado global
   router.js             Entornos, vistas y enlaces directos
   state.js              Estado de la venta de práctica
-  progress.js           Videos vistos (localStorage)
+  progress.js           Progreso de la ruta: videos vistos y misiones cumplidas (localStorage)
   lesson.js             Vista de lección
   web.js                Sistema Web: grilla y módulo
   cheatsheet.js         Hoja de atajos
@@ -36,18 +36,19 @@ js/
   keys.js               Traduce las teclas del navegador al keymap de la Caja
   utils.js, icons.js    Utilidades e íconos
   data/
-    videos.js           Videos: capítulos, paso a paso y narración con tiempos
+    videos.js           Videos: capítulos, paso a paso, narración con tiempos y misiones de práctica
     spots.js            Los 19 puntos del mapa
     content.js          Keymap real por pantalla, menú, catálogo y clientes de ejemplo, accesos, respuestas y módulos web
   caja/
     index.js            Inicio de Caja POS
+    route.js            Barra de pasos y tarjeta del paso con sus misiones
     replica.js          Dibuja la réplica y recibe los toques
     actions.js          Qué hace cada botón en el modo Practicar
     dialogs.js          Cantidad, Descuento, Cambio de precio, Productos, Pago detallado
     inspector.js        Panel lateral del mapa
     player.js           Video sincronizado del panel lateral
 assets/caja/            Imágenes reales de la Caja (fondos y botones de light_small)
-videos/                 Tutoriales 01 a 08 en 720p
+videos/                 Tutoriales 01 a 13 en 720p
 posters/                Portadas de los videos
 ```
 

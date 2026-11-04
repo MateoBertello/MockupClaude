@@ -6,6 +6,7 @@ import { VIDEOS, videoSrc, posterSrc, cueEnd, cueAt } from '../data/videos.js';
 import { SPOTS } from '../data/spots.js';
 import { S } from '../state.js';
 import { goVideo } from '../router.js';
+import { setWatched } from '../progress.js';
 
 const video = $('#iv');
 const cuesEl = $('#ivCues');
@@ -16,7 +17,8 @@ export const pausePlayer = () => { if (!video.paused) video.pause(); };
 
 export function renderChips() {
   const s = SPOTS[S.pinned];
-  $('#vidLabel').textContent = `Video de: ${s.label}`;
+  const whole = st.ref && st.ref.a === 0 && st.ref.b >= VIDEOS[st.ref.v].dur - 0.1;
+  $('#vidLabel').textContent = whole ? `Video ${st.ref.v}: ${VIDEOS[st.ref.v].title}` : `Video de: ${s.label}`;
   $('#vidChips').innerHTML = s.refs.map((r, i) => {
     const on = st.ref && st.ref.v === r.v && st.ref.a === r.a;
     return `<button type="button" class="chip${on ? ' on' : ''}" data-ref="${i}">${r.v} · ${esc(VIDEOS[r.v].title)} <span class="t">${mmss(r.a)}</span></button>`;
@@ -37,6 +39,7 @@ function load(v) {
 }
 
 function setSegment(ref) {
+  ref = { ...ref, b: Math.min(ref.b, VIDEOS[ref.v].dur) };
   st.ref = ref; st.done = false;
   segEnd.classList.remove('show');
   $('#vidSeg').textContent = `${ref.v} · ${mmss(ref.a)} – ${mmss(ref.b)}`;
@@ -83,6 +86,7 @@ function sync(force) {
 }
 
 export function initPlayer() {
+  video.addEventListener('ended', () => { if (st.v) setWatched(st.v, true); });
   video.addEventListener('timeupdate', () => sync(false));
   video.addEventListener('seeked', () => sync(false));
 

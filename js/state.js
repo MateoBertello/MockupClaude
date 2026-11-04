@@ -16,6 +16,9 @@ export const S = {
   fact: null,               // cliente de facturación: { doc, name, iva }
   comprobante: null,        // null = factura electrónica manual; si no, 'Factura B', 'Factura A'…
   lastQuery: '',            // último filtro de Productos (la tecla V lo conserva)
+  returning: false,         // esperando el artículo de una devolución
+  ctacte: false,            // en un cobro de cuenta corriente
+  suspended: null,          // venta en espera (Suspender / Resumir)
   dlg: null,                // ventana abierta dentro de la réplica
   pays: [],                 // pagos cargados en Pago detallado
   log: []                   // últimas acciones de práctica
@@ -49,11 +52,11 @@ export function markSeen(id) {
 }
 
 export function clearSale() {
-  S.rows = []; S.sel = 0; S.client = null; S.fact = null; S.comprobante = null; S.pays = []; S.screen = 'venta';
+  S.rows = []; S.sel = 0; S.client = null; S.fact = null; S.comprobante = null; S.pays = []; S.screen = 'venta'; S.returning = false; S.ctacte = false;
 }
 
 /** Pantalla del keymap en la que está la práctica. */
-export const keyState = () => (S.screen === 'cobro' ? 'cobro' : S.rows.length ? 'venta' : 'libre');
+export const keyState = () => (S.screen === 'cobro' ? 'cobro' : (S.rows.length || S.ctacte) ? 'venta' : 'libre');
 export function resetSale() {
   clearSale();
   S.rows = sampleSale(); S.sel = 1;

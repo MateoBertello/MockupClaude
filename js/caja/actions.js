@@ -4,11 +4,22 @@ import { $, money, fmtQty } from '../utils.js';
 import { CATALOG } from '../data/content.js';
 import { S, totals, addLog, selItem, hasDiscount, nextId, keyState } from '../state.js';
 import { shortcutsFor } from '../keys.js';
-import { openDlg, tenderAction } from './dialogs.js';
+import { openDlg, tenderAction, openFunction } from './dialogs.js';
+import { track } from '../progress.js';
+import { renderStepCard } from './route.js';
 import { renderBase } from './replica.js';
 import { renderInfo, pin } from './inspector.js';
 
 export function refresh() { renderBase(); renderInfo(); }
+
+/** Registra un evento de práctica; si cumple misiones nuevas, las anota para el panel de la ruta. */
+export function mission(ev) {
+  const fresh = track(ev);
+  if (!fresh.length) return;
+  const here = fresh.find(f => f.id === S.step) || fresh[0];
+  S.lastMission = { ev, text: here.text, at: Date.now() };
+  renderStepCard();
+}
 
 export function addItem([code, name, price]) {
   S.rows.push({ t: 'i', id: nextId(), code, name, qty: 1, price });
@@ -19,7 +30,8 @@ export function addItem([code, name, price]) {
 /** Enter en el campo de código. */
 export function codeEntered(v) {
   const p = CATALOG.find(c => c[0] === v);
-  if (p) addItem(p); else if (v) addLog(`No se encontró el código ${v}. Probá con 8902, 1 o 206.`);
+  if (p && S.returning) { openDlg({ k: 'devprecio', p }); return; }
+  if (p) { addItem(p); mission('code-add'); } else if (v) addLog(`No se encontró el código ${v}. Probá con 8902, 1 o 206.`);
   pin('codigo', { video: false });
   refresh();
 }
@@ -27,7 +39,7 @@ export function codeEntered(v) {
 const logQty = r => addLog(`${r.name}: cantidad ${fmtQty(r.qty)} · Total ${money(totals().total)}`);
 
 const ACTIONS = {
-  mas(r) { r.qty += 1; logQty(r); },
+  mas(r) { r.qty += 1; logQty(r); mission('qty-plus'); },
   menos(r) {
     if (r.qty <= 1) return addLog('La cantidad mínima es 1. Para quitar el artículo usá el tacho.');
     r.qty -= 1; logQty(r);
@@ -45,8 +57,8 @@ const ACTIONS = {
     }
     openDlg({ k: 'confirm', title: 'Quitar renglón', msg: `¿Desea quitar ${x.name}?`, run: 'quitar' });
   },
-  arriba() { if (S.sel > 0) S.sel -= 1; },
-  abajo() { if (S.sel < S.rows.length - 1) S.sel += 1; },
+  arriba() { if (S.sel > 0) { S.sel -= 1; mission('move'); } },
+  abajo() { if (S.sel < S.rows.length - 1) { S.sel += 1; mission('move'); } },
   stock(r) { openDlg({ k: 'info', title: 'Detalle de stock', msg: `${r.name}: 24 unidades en este local (dato de ejemplo).` }); },
   productos(_, keep) { openDlg({ k: 'productos', q: keep ? S.lastQuery : '', idx: 0 }); },
   cancelar() {
@@ -54,9 +66,11 @@ const ACTIONS = {
     openDlg({ k: 'confirm', title: 'Cancelar', msg: '¿Desea cancelar la transacción?', run: 'cancelar' });
   },
   pagar() {
+    if (S.ctacte && !S.rows.length) return addLog('En la Caja real el cobro de cuenta corriente sigue en Pago detallado. Esta práctica llega hasta acá: Cancelar vuelve a la venta.');
     if (!S.rows.length || totals().total <= 0) return addLog('Cargá al menos un artículo antes de cobrar.');
     S.pays = []; S.screen = 'cobro';
     addLog('Se abrió Pago detallado. Elegí un medio de pago o usá las teclas 1 a 6.');
+    mission('tender-open');
   },
   clienteBuscar() { openDlg({ k: 'clientes', q: '', idx: 0 }); },
   cliente() { openDlg({ k: 'clientes', q: '', idx: 0 }); },
@@ -64,11 +78,12 @@ const ACTIONS = {
     if (!S.client) return addLog('Primero asigná un cliente en el panel Cliente.');
     S.fact = { doc: S.client.doc, name: S.client.name, iva: S.client.iva };
     addLog('El cliente de la venta pasó al panel Factura.');
+    mission('client-copy');
   },
   comprobante() { openDlg({ k: 'comprobante' }); },
   factura() { openDlg({ k: 'comprobante' }); },
   clienteFact() { openDlg({ k: 'factcli' }); },
-  menu() { openDlg({ k: 'menu', q: '', idx: 0 }); }
+  menu() { openDlg({ k: 'menu', q: '', idx: 0 }); mission('menu-open'); }
 };
 
 /* Botones que trabajan sobre un artículo seleccionado (no sobre un renglón de descuento). */
@@ -100,6 +115,12 @@ const KEY_ACTIONS = {
   cobro: { Z: ['comprobante'], O: ['clienteFact'], D: ['clienteBuscar'] }
 };
 const TENDER_KEYS = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
+/* Teclas que abren funciones del menú, por pantalla. */
+const FUNC_KEYS = {
+  venta: { F: 'Ingreso Dinero', R: 'Retiro Dinero', A: 'Arqueo Caja', 'CTRL+G': 'Gastos', D: 'Descuento Total', 'CTRL+D': 'Devolucion Articulo', J: 'Suspender Venta' },
+  libre: { F: 'Ingreso Dinero', R: 'Retiro Dinero', A: 'Arqueo Caja', 'CTRL+G': 'Gastos', 'CTRL+A': 'Agregar cliente', 'CTRL+C': 'Cobro Cta Cte', N: 'Nota Credito Libre', J: 'Resumir Venta', Z: 'Factura Electronica' },
+  cobro: {}
+};
 
 /**
  * Responde a una tecla con la Caja de práctica. Devuelve true si la usó.
@@ -120,6 +141,8 @@ export function practiceKey(combo) {
     if (combo === 'L') { tenderAction('limpiar'); return { handled: true }; }
     if (combo === 'F') { tenderAction('cancelar-venta'); return { handled: true }; }
   }
+  const fnName = FUNC_KEYS[state][combo];
+  if (fnName && openFunction(fnName)) { pin('menu', { video: false }); renderInfo(); return { handled: true, spot: 'menu' }; }
   const mapped = KEY_ACTIONS[state][combo];
   if (mapped) {
     const [id, opts] = mapped;

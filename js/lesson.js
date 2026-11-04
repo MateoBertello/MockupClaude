@@ -5,8 +5,8 @@ import { $, $$, esc, mmss, rich, seekT, play } from './utils.js';
 import { line, I } from './icons.js';
 import { VIDEOS, VIDEO_IDS, videoSrc, posterSrc, cueAt, chapterAt, allSteps, indexAt } from './data/videos.js';
 import { SPOTS } from './data/spots.js';
-import { isDone, setDone, nextAfter } from './progress.js';
-import { goSpot, goVideo, goHome } from './router.js';
+import { isWatched as isDone, setWatched as setDone, nextAfter, stepStatus } from './progress.js';
+import { goSpot, goVideo, goHome, goStep } from './router.js';
 
 const view = $('#view-video');
 const video = $('#lv');
@@ -58,7 +58,7 @@ function sideHtml(id, v) {
     </div>
     <button type="button" class="card practice-cta" data-practice="${v.practice}">
       <span class="pc-ic">${practice.icon}</span>
-      <span><b>Probalo en la Caja</b><small>Abrí la Caja de práctica con ${esc(practice.label)} marcado.</small></span>
+      <span><b>Probalo en la Caja</b><small>${stepStatus(id).total} misiones para hacer en la Caja de práctica.</small></span>
       ${line('arrow')}
     </button>`;
 }
@@ -117,7 +117,7 @@ export function initLesson() {
     if (!el) return;
     if (el.id === 'lDone') { setDone(current, !isDone(current)); renderDone(); return; }
     if (el.dataset.spot) { pauseLesson(); goSpot(el.dataset.spot); return; }
-    if (el.dataset.practice) { pauseLesson(); goSpot(el.dataset.practice, { practice: true }); return; }
+    if (el.dataset.practice) { pauseLesson(); goStep(current); return; }
     if (el.dataset.next) { goVideo(el.dataset.next, 0); return; }
     if (el.hasAttribute('data-home')) { pauseLesson(); goHome('ruta'); return; }
     if (el.dataset.t) { video.currentTime = seekT(+el.dataset.t); play(video); }

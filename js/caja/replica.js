@@ -34,7 +34,7 @@ const zone = (id, b, inner = '') => `<div class="sp zone${pinCls(id)}" ${spotAtt
 const GRAY = '#8C8C8C';
 
 function titleLines() {
-  if (!S.rows.length && S.screen === 'venta') return ['', ''];
+  if (S.ctacte || (!S.rows.length && S.screen === 'venta')) return ['', ''];
   return S.comprobante
     ? [`VENTA AFIP / ${S.comprobante.replace('Factura ', 'FAC ')}`, 'Factura Electronica']
     : ['VENTA FAC. ELECTRONICA MANUAL', 'ESTE COMPROBANTE NO ESTA APROBADO POR AFIP'];
@@ -103,8 +103,9 @@ function saleScreen() {
   // Último artículo
   h += img('btn/Icon_Shoping.png', [71, 76, 50, 50]);
   h += img('bg/ImgItem.png', [131, 76, 481, 50]) + img('bg/ImgItemPrice.png', [622, 76, 150, 50]);
-  const art = cur ? (cur.t === 'i' ? `${fmtQty(cur.qty)} x ${esc(cur.name)}` : esc(cur.name)) : '';
-  h += lbl(art, [141, 76, 466, 50], { f: 20, bold: true });
+  const art = S.returning ? 'INGRESE ARTICULO PARA DEVOLUCION' : cur ? (cur.t === 'i' ? `${fmtQty(cur.qty)} x ${esc(cur.name)}` : esc(cur.name)) : '';
+  h += lbl(art, [141, 76, 466, 50], { f: 20, bold: true, color: S.returning ? '#D11' : '' });
+  if (S.ctacte) h += lbl('COBRO CUENTA CORRIENTE', [190, 15, 300, 20], { f: 16, bold: true });
   h += lbl(cur ? money(cur.t === 'i' ? cur.price : -cur.amount) : '', [627, 76, 140, 50], { f: 20, bold: true, align: 'center' });
   h += zone('articulo', [71, 76, 701, 50]);
   // Carrito
@@ -135,6 +136,7 @@ function saleScreen() {
   h += lbl('Cant. Items:', [61, 494, 100, 20], { f: 14, bold: true, align: 'center' });
   h += lbl(String(r.filter(x => x.t === 'i').length), [150, 494, 40, 20], { f: 14, bold: true, align: 'center' });
   if (S.client) h += lbl('Lista #1', [200, 494, 80, 20], { f: 12 });
+  if (S.suspended) h += lbl('1 venta en espera', [334, 595, 450, 18], { f: 13, color: GRAY });
   h += panels();
   return h;
 }
@@ -184,11 +186,11 @@ export function renderDots() {
   dotsEl.innerHTML = SPOT_IDS.map(id => {
     const [x, y, w] = SPOTS[id].box;
     const small = w < 30;
-    return `<span class="dot${S.seen.has(id) ? ' seen' : ''}${small ? ' sm' : ''}" style="${at(small ? x + w / 2 : Math.min(x + w - 5, 1034), small ? y - 3 : y + 6)}"></span>`;
+    const dim = S.focus && S.focus.size && !S.focus.has(id);
+    return `<span class="dot${S.seen.has(id) ? ' seen' : ''}${small ? ' sm' : ''}${dim ? ' dim' : ''}" style="${at(small ? x + w / 2 : Math.min(x + w - 5, 1034), small ? y - 3 : y + 6)}"></span>`;
   }).join('');
   const n = S.seen.size, tot = SPOT_IDS.length;
-  $('#progTxt').textContent = `${n} de ${tot}`;
-  $('#progBar').style.width = (n / tot * 100) + '%';
+  $('#progTxt').textContent = `· ${n} de ${tot} vistos`;
 }
 
 /** Marca un punto como fijado sin volver a dibujar todo el lienzo. */

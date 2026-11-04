@@ -4,9 +4,9 @@
 // También responde a los botones de la pantalla de cobro.
 
 import { $, esc, money, fmtQty, norm, box, fs } from '../utils.js';
-import { CATALOG, MEDIOS, CUSTOMERS, MENU_OPTIONS } from '../data/content.js';
-import { S, totals, paid, addLog, selItem, nextId, clearSale } from '../state.js';
-import { addItem, refresh } from './actions.js';
+import { CATALOG, MEDIOS, CUSTOMERS, MENU_OPTIONS, MENU_SALE } from '../data/content.js';
+import { S, totals, paid, addLog, selItem, nextId, clearSale, keyState } from '../state.js';
+import { addItem, refresh, mission } from './actions.js';
 
 const dlgEl = $('#rp-dlg');
 const A = p => `assets/caja/${p}`;
@@ -48,12 +48,14 @@ function form(title, fields, { ok = 'ok', err = '', W = 400 } = {}) {
   return win(W, H, h, { label: title, cls: 'rform' });
 }
 
-/** Confirmación como dataentry.confirmation (400 x 270). */
-function confirmWin(title, msg, ok = 'confirm-ok') {
+/** Confirmación como dataentry.confirmation (400 x 270). Con only, un solo Aceptar (aviso). */
+function confirmWin(title, msg, ok = 'confirm-ok', only = false) {
   const L = loc(400, 270);
+  const btns = only
+    ? imgBtn(L(110, 210, 180, 50), 'btn_Aceptar', 'close', 'Aceptar')
+    : imgBtn(L(15, 210, 180, 50), 'btn_Aceptar', ok, 'Aceptar') + imgBtn(L(205, 210, 180, 50), 'btn_Cancelar', 'close', 'Cancelar');
   const h = closeBtn(L(363, 5, 30, 30)) + text(esc(title), L(0, 36, 400, 36), 20, 'justify-content:center') +
-    text(esc(msg), L(20, 72, 360, 128), 17, 'justify-content:center;text-align:center;white-space:normal') +
-    imgBtn(L(15, 210, 180, 50), 'btn_Aceptar', ok, 'Aceptar') + imgBtn(L(205, 210, 180, 50), 'btn_Cancelar', 'close', 'Cancelar');
+    text(esc(msg), L(20, 72, 360, 128), 17, 'justify-content:center;text-align:center;white-space:normal') + btns;
   return win(400, 270, h, { bg: 'bgConfirmation', label: title || 'Confirmación' });
 }
 
@@ -72,7 +74,7 @@ const filtered = d => {
   const q = norm(d.q || '');
   if (d.k === 'productos') return CATALOG.filter(p => !q || norm(p[1]).includes(q) || p[0].startsWith(q));
   if (d.k === 'clientes') return customers.filter(c => !q || norm(c.name).includes(q) || c.doc.includes(q));
-  return MENU_OPTIONS.filter(o => !q || norm(o).includes(q));
+  return (keyState() === 'venta' ? MENU_SALE : MENU_OPTIONS).filter(o => !q || norm(o).includes(q));
 };
 function listRows(d) {
   d.list = filtered(d);
@@ -99,7 +101,15 @@ const VIEWS = {
   pagoMonto: d => form(d.medio, [{ id: 'fImporte', label: 'Importe', value: d.def.toFixed(2), num: true }]),
   confirm: d => confirmWin(d.title || '', d.msg),
   aviso: d => confirmWin('Quitar renglón', d.msg, 'aviso-go'),
-  info: d => confirmWin(d.title, d.msg, 'close'),
+  info: d => confirmWin(d.title || '', d.msg, 'close', true),
+  monto: d => form('', [{ id: 'fMontoCaja', label: 'Ingrese Monto', value: '', num: true }]),
+  gasto: () => form('Declaracion de Gasto', [{ id: 'gConcepto', label: 'Concepto', options: ['Limpieza', 'Mantenimiento', 'Librería', 'Delivery', 'Otros'] }, { id: 'gMotivo', label: 'Motivo', value: '' }, { id: 'gMonto', label: 'Monto del gasto', value: '', num: true }]),
+  dtotal: () => form('Descuento Total', [{ id: 'fVal', label: 'Valor', value: '10.0', num: true }, { id: 'fTipo', label: 'Tipo de descuento', options: ['Descuento Porcentual', 'Descuento Monto Fijo'] }]),
+  devprecio: d => form('Devolucion Articulo', [{ id: 'fPrecioDev', label: `Precio de ${d.p[1]}`, value: d.p[2].toFixed(2), num: true }]),
+  resumir: () => {
+    const t = new Date(), p = n => String(n).padStart(2, '0');
+    return form('Resumir Transaccion', [{ id: 'rSuc', label: 'Sucursal', options: ['Sucursal 1', 'Sucursal 2'] }, { id: 'rFecha', label: 'Fecha(ddmmaa)', value: `${p(t.getDate())}/${p(t.getMonth() + 1)}/${String(t.getFullYear()).slice(2)}` }]);
+  },
   productos: d => listWin({ W: 1000, H: 550, bg: 'bg_item_search', x: 20, y: 52, label: 'Productos', input: d.q, list: listRows(d), listBox: [12, 131, 755, 342], ok: [265, 490, 180, 50], cancel: [455, 490, 180, 50] }),
   clientes: d => {
     const L = loc(580, 450);
@@ -118,7 +128,8 @@ export function renderDlg() {
   dlgEl.hidden = !d;
   dlgEl.innerHTML = d ? VIEWS[d.k](d) : '';
   if (!d) return;
-  const first = $('#lq', dlgEl) || $('.rwin input, .rwin select', dlgEl) || $('.rwin [data-act="confirm-ok"], .rwin [data-act="aviso-go"], .rwin [data-act="close"]', dlgEl);
+  // Foco como en la Caja: el filtro o el primer campo; en una confirmación, Aceptar.
+  const first = $('#lq', dlgEl) || $('.rwin input, .rwin select', dlgEl) || $('.rwin [data-act="confirm-ok"]', dlgEl) || $('.rwin [data-act="aviso-go"]', dlgEl) || $('.rwin .dlg-btn[data-act="close"]', dlgEl);
   if (first) { first.focus(); if (first.select) first.select(); }
 }
 
@@ -138,6 +149,7 @@ const done = () => { closeDlg(); refresh(); };
 function finishSale(printed) {
   const vuelto = paid() - totals().total;
   clearSale();
+  mission('sale-done');
   addLog(`Venta registrada${printed ? ' e impresa' : ''}${vuelto > 0 ? ` · Vuelto ${money(vuelto)}` : ''}. La Caja vuelve a cero.`);
   done();
 }
@@ -146,7 +158,44 @@ const HANDLERS = {
   cantidad() {
     const q = num('#fQty'), r = selItem();
     if (!(q > 0)) return fail('Ingresá un número mayor que cero.');
-    r.qty = q; addLog(`${r.name}: cantidad ${fmtQty(q)} · Total ${money(totals().total)}`); done();
+    r.qty = q; addLog(`${r.name}: cantidad ${fmtQty(q)} · Total ${money(totals().total)}`); mission('qty-set'); done();
+  },
+  monto(d) {
+    const v = num('#fMontoCaja');
+    if (!(v > 0)) return fail('Escribí un monto mayor que cero.');
+    addLog(`${d.kind === 'in' ? 'Ingreso' : 'Retiro'} de dinero registrado: ${money(v)}.`);
+    mission(d.kind === 'in' ? 'cash-in' : 'cash-out'); done();
+  },
+  gasto() {
+    const v = num('#gMonto');
+    if (!val('#gMotivo')) return fail('Escribí el motivo del gasto.');
+    if (!(v > 0)) return fail('Escribí el monto del gasto.');
+    addLog(`Gasto declarado: ${val('#gConcepto')} · ${money(v)}.`); mission('expense'); done();
+  },
+  dtotal() {
+    const v = num('#fVal'), pct = val('#fTipo').includes('Porcentual'), sub = totals().sub;
+    if (!(v > 0)) return fail('Escribí un valor mayor que cero.');
+    const amount = Math.round((pct ? sub * v / 100 : v) * 100) / 100;
+    if (amount > totals().total) return fail('El descuento supera el total de la venta.');
+    S.rows.push({ t: 'd', id: nextId(), of: null, amount, name: `Desc Total ${pct ? '%' + v.toFixed(1) : '$' + v.toFixed(2)}` });
+    S.sel = S.rows.length - 1;
+    addLog(`Descuento total de ${money(amount)} · Total ${money(totals().total)}`); mission('total-discount'); done();
+  },
+  devprecio(d) {
+    const v = num('#fPrecioDev');
+    if (!(v > 0)) return fail('Escribí el precio.');
+    S.rows.push({ t: 'i', id: nextId(), code: d.p[0], name: d.p[1], qty: -1, price: v });
+    S.sel = S.rows.length - 1; S.returning = false;
+    addLog(`Devolución de ${d.p[1]}: el renglón queda en negativo · Total ${money(totals().total)}`); mission('return-item'); done();
+  },
+  resumir() {
+    const s = S.suspended, today = new Date().toDateString();
+    if (!s || s.day !== today || val('#rSuc') !== 'Sucursal 1') {
+      openDlg({ k: 'info', title: 'Resumir Transaccion', msg: 'No hay ventas en espera para esa sucursal y fecha.' });
+      return;
+    }
+    Object.assign(S, { rows: s.rows, sel: 0, client: s.client, fact: s.fact, comprobante: s.comprobante, suspended: null });
+    addLog('Venta retomada desde la espera.'); mission('resume'); done();
   },
   descuento() {
     const r = selItem(), v = num('#fVal'), pct = val('#fTipo').includes('Porcentual'), line = r.qty * r.price;
@@ -155,18 +204,18 @@ const HANDLERS = {
     if (amount > line) return fail('El descuento supera el importe del artículo.');
     const at = S.rows.indexOf(r) + 1;
     S.rows.splice(at, 0, { t: 'd', id: nextId(), of: r.id, amount, name: `Desc ${pct ? '%' + v.toFixed(1) : '$' + v.toFixed(2)} Art. ${r.name}` });
-    S.sel = at; addLog(`Descuento de ${money(amount)} · Total ${money(totals().total)}`); done();
+    S.sel = at; addLog(`Descuento de ${money(amount)} · Total ${money(totals().total)}`); mission('discount'); done();
   },
   precio() {
     const r = selItem(), m = num('#fMonto'), p = num('#fPct');
     if (m > 0) r.price = m;
     else if (p > 0) r.price = Math.round(r.price * (val('#fAjuste') === 'Recargo' ? 1 + p / 100 : 1 - p / 100) * 100) / 100;
     else return fail('Escribí un monto o un porcentaje.');
-    addLog(`Nuevo precio de ${r.name}: ${money(r.price)} · Total ${money(totals().total)}`); done();
+    addLog(`Nuevo precio de ${r.name}: ${money(r.price)} · Total ${money(totals().total)}`); mission('price'); done();
   },
   comprobante() {
     S.comprobante = val('#fTipoFac');
-    addLog(`Comprobante: ${S.comprobante}. El título cambió a VENTA AFIP y la factura la emite el sistema al cobrar.`); done();
+    addLog(`Comprobante: ${S.comprobante}. El título cambió a VENTA AFIP y la factura la emite el sistema al cobrar.`); mission('comprobante'); done();
   },
   factcli() {
     const nro = val('#fNroDoc');
@@ -179,22 +228,28 @@ const HANDLERS = {
     if (!/^\d{7,11}$/.test(nro)) return fail('Completá el número de documento.');
     if (!nombre) return fail('Completá el nombre o la razón social.');
     customers.unshift({ doc: nro, name: [nombre, val('#aApellido')].filter(Boolean).join(' '), iva: val('#aIva'), balance: 0 });
-    addLog('Cliente guardado. Buscalo con el primer ícono del panel Cliente.'); done();
+    addLog('Cliente guardado. Buscalo con el primer ícono del panel Cliente.'); mission('alta-client'); done();
   },
   pagoMonto(d) {
     const v = num('#fImporte');
     if (!(v > 0)) return fail('Escribí un importe mayor que cero.');
     S.pays.push({ medio: d.medio, monto: v });
-    addLog(`${d.medio}: ${money(v)} · Saldo ${money(Math.max(0, totals().total - paid()))}`); done();
+    addLog(`${d.medio}: ${money(v)} · Saldo ${money(Math.max(0, totals().total - paid()))}`);
+    if (d.medio === 'Efectivo') mission('pay-efectivo');
+    if (new Set(S.pays.map(x => x.medio)).size >= 2) mission('pay-two');
+    done();
   },
   confirm(d) {
     if (d.run === 'quitar') {
       const x = S.rows.splice(S.sel, 1)[0];
       S.sel = Math.max(0, Math.min(S.sel, S.rows.length - 1));
       addLog(`${x.t === 'd' ? 'Se quitó el descuento' : `Se quitó ${x.name}`} · Total ${money(totals().total)}`);
-    } else if (d.run === 'cancelar') { clearSale(); addLog('Venta cancelada: carrito, cliente y factura vacíos.'); }
-    else if (d.run === 'limpiar') { S.pays = []; addLog('Se limpiaron los pagos.'); }
+      mission(x.t === 'd' ? 'remove-discount' : 'remove-item');
+    } else if (d.run === 'cancelar') { clearSale(); addLog('Venta cancelada: carrito, cliente y factura vacíos.'); mission('cancel-sale'); }
+    else if (d.run === 'limpiar') { S.pays = []; addLog('Se limpiaron los pagos.'); mission('clean-pays'); }
     else if (d.run === 'imprimir') return finishSale(true);
+    else if (d.run === 'arqueo') { mission('arqueo-open'); openDlg({ k: 'info', title: 'Arqueo Caja', msg: 'El arqueo de cajero tiene su propio video. En la práctica la Caja vuelve a la venta.' }); return; }
+    else if (d.run === 'nc') { addLog('En la Caja real empieza la nota de crédito. Esta práctica no la emite.'); }
     done();
   },
   aviso() {
@@ -205,16 +260,21 @@ const HANDLERS = {
   productos(d) {
     const p = d.list[d.idx]; if (!p) return;
     S.lastQuery = d.q || '';
-    closeDlg(); addItem(p); refresh();
+    closeDlg();
+    if (S.returning) { openDlg({ k: 'devprecio', p }); return; }
+    addItem(p); mission('item-search'); refresh();
   },
   clientes(d) {
     const c = d.list[d.idx]; if (!c) return;
-    S.client = c; addLog(`Cliente asignado: ${c.name}.`); done();
+    S.client = c;
+    if (d.purpose === 'ctacte') { S.ctacte = true; addLog(`Cobro de cuenta corriente de ${c.name}. Balance ${money(c.balance)}.`); mission('ctacte'); }
+    else { addLog(`Cliente asignado: ${c.name}.`); mission('client-set'); }
+    done();
   },
   menu(d) {
     const o = d.list[d.idx]; if (!o) return;
-    if (o.startsWith('Agregar cliente')) { openDlg({ k: 'alta' }); return; }
-    addLog(`En la Caja real, "${o}" abre esa función. Esta práctica no la simula.`); done();
+    closeDlg();
+    if (!openFunction(o.replace(/\s*\(.*$/, '').trim())) { addLog(`En la Caja real, "${o}" abre esa función. Esta práctica no la simula.`); refresh(); }
   }
 };
 
@@ -222,7 +282,38 @@ const HANDLERS = {
 function closeCurrent() {
   const d = S.dlg;
   if (d && d.k === 'confirm' && d.run === 'imprimir') { finishSale(false); return; }
-  closeDlg();
+  if (d && d.k === 'confirm' && d.run === 'arqueo') mission('arqueo-open');
+  if (d && d.k === 'monto') { openDlg({ k: 'info', msg: d.kind === 'in' ? 'No se realizo Fondo Fijo de Caja. Debe ingresar los datos solicitados para poder realizarlo.' : 'No se realizó el retiro de dinero.' }); return; }
+  if (d && d.k === 'gasto') { openDlg({ k: 'info', msg: 'No se realizó la declaración de gasto.' }); return; }
+  if (d && d.k === 'devprecio') S.returning = false;
+  closeDlg(); refresh();
+}
+
+/** Abre una función del menú por su nombre (sin el atajo). Devuelve false si la práctica no la simula. */
+export function openFunction(name) {
+  const st = keyState();
+  const F = {
+    'Agregar cliente': () => openDlg({ k: 'alta' }),
+    'Arqueo Caja': () => openDlg({ k: 'confirm', title: 'Arqueo Caja', msg: 'Desea realizar Arqueo de Cajero?', run: 'arqueo' }),
+    'Cobro Cta Cte': () => st === 'libre' ? openDlg({ k: 'clientes', q: '', idx: 0, purpose: 'ctacte' }) : false,
+    'Factura Electronica': () => openDlg({ k: 'comprobante' }),
+    'Cliente Facturacion': () => openDlg({ k: 'factcli' }),
+    'Gastos': () => openDlg({ k: 'gasto' }),
+    'Ingreso Dinero': () => openDlg({ k: 'monto', kind: 'in' }),
+    'Retiro Dinero': () => openDlg({ k: 'monto', kind: 'out' }),
+    'Nota Credito Libre': () => { if (st !== 'libre') return false; mission('nc-open'); openDlg({ k: 'confirm', title: 'Nota Credito Libre', msg: '¿Está seguro que desea crear una Nota de Crédito?', run: 'nc' }); },
+    'Resumir Venta': () => st === 'libre' ? openDlg({ k: 'resumir' }) : false,
+    'Descuento Total': () => st === 'venta' ? openDlg({ k: 'dtotal' }) : false,
+    'Devolucion Articulo': () => { if (st !== 'venta' && st !== 'libre') return false; S.returning = true; addLog('La Caja espera el artículo a devolver: escaneá su código o buscalo con Productos.'); refresh(); },
+    'Suspender Venta': () => {
+      if (st !== 'venta') return false;
+      S.suspended = { rows: S.rows, client: S.client, fact: S.fact, comprobante: S.comprobante, day: new Date().toDateString() };
+      clearSale(); addLog('Venta suspendida. Retomala con Resumir Venta (J) cuando la Caja esté sin venta.'); mission('suspend'); refresh();
+    }
+  };
+  const fn = F[name];
+  if (!fn) return false;
+  return fn() !== false;
 }
 
 export function dlgAction(a, el) {

@@ -1,19 +1,18 @@
-// Inicio de Caja POS: ruta de videos, accesos directos, mapa interactivo y respuestas rápidas.
+// Inicio de Caja POS: la ruta unida a la Caja de práctica, accesos directos y respuestas rápidas.
 
 import { $, $$, esc, mmss, store, flash } from '../utils.js';
 import { I, line } from '../icons.js';
-import { SPOTS, SPOT_IDS } from '../data/spots.js';
-import { VIDEOS, VIDEO_IDS, TOTAL_DUR, UPCOMING, posterSrc } from '../data/videos.js';
+import { UPCOMING } from '../data/videos.js';
 import { QUICK, TASKS } from '../data/content.js';
 import { S, addLog, resetSale } from '../state.js';
-import { isDone, doneCount, nextPending, onProgress } from '../progress.js';
 import { initReplica, renderBase, renderDots, spotEl } from './replica.js';
 import { initDialogs, closeDlg } from './dialogs.js';
 import { comboFromEvent } from '../keys.js';
 import { pin, renderInfo } from './inspector.js';
 import { initPlayer, cueRef, renderChips } from './player.js';
 import { practiceKey, refresh } from './actions.js';
-import { follow, goVideo } from '../router.js';
+import { follow } from '../router.js';
+import { initRoute, renderStepCard } from './route.js';
 
 export function setMode(mode) {
   if (S.mode === mode) return;
@@ -21,27 +20,11 @@ export function setMode(mode) {
   $$('.seg [data-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
   if (mode === 'explore') { closeDlg(); S.screen = 'venta'; S.pays = []; }
   else if (!S.log.length) addLog('Venta de ejemplo cargada con dos artículos.');
+  $('#stageHint').textContent = mode === 'practice'
+    ? 'Los botones y las teclas funcionan como en la Caja real.'
+    : 'Pasá el cursor por un botón para ver qué hace, o apretá una tecla.';
   refresh();
-}
-
-/* ---------- Ruta de videos ---------- */
-function renderRoute() {
-  const n = doneCount(), total = VIDEO_IDS.length;
-  $('#routeCount').textContent = n === total ? '¡Ruta completada!' : `${n} de ${total} vistos`;
-  $('#routeFill').style.width = (n / total * 100) + '%';
-  $('#routeBar').setAttribute('aria-valuenow', n);
-  $('#routeBar').setAttribute('aria-valuemax', total);
-  $('#rutaTitle').textContent = `Dominá la Caja en ${total} videos`;
-  $('#routeStart').innerHTML = `${n === total ? 'Repasar la ruta' : n ? 'Seguir la ruta' : 'Empezar la ruta'} ${line('arrow')}`;
-  $('#routeMeta').textContent = `${total} videos · menos de ${Math.ceil(TOTAL_DUR / 60)} minutos`;
-  $('#vgrid').innerHTML = VIDEO_IDS.map(id => {
-    const v = VIDEOS[id], d = isDone(id);
-    return `<button type="button" class="vcard${d ? ' done' : ''}" data-video="${id}" style="--tint:${v.tint}" aria-label="Video ${id}: ${esc(v.title)}, ${mmss(v.dur)}${d ? ', visto' : ''}">
-      <span class="th"><img src="${posterSrc(id)}" alt="" loading="lazy"><span class="n">${id}</span><span class="d tnum">${mmss(v.dur)}</span><span class="pl">${line('play')}</span></span>
-      <span class="b"><span class="cat">${esc(v.category)}</span><h3>${esc(v.title)}</h3><p>${esc(v.desc)}</p>
-      <span class="foot"><span>${d ? 'Visto' : `${v.chapters.length} capítulos`}</span>${line(d ? 'check' : 'arrow')}</span></span>
-    </button>`;
-  }).join('');
+  renderStepCard();
 }
 
 function renderStatic() {
@@ -65,7 +48,6 @@ export function handleCajaKey(e) {
 }
 
 export function initCaja() {
-  $('#cnt-spots').textContent = SPOT_IDS.length;
   initReplica();
   initDialogs();
   initPlayer();
@@ -73,12 +55,8 @@ export function initCaja() {
   renderInfo();
   renderChips();
   renderStatic();
-  renderRoute();
-  onProgress(renderRoute);
-  cueRef(SPOTS[S.pinned].refs[0], false);
-
-  $('#routeStart').addEventListener('click', () => goVideo(nextPending(), 0));
-  $('#vgrid').addEventListener('click', e => { const b = e.target.closest('[data-video]'); if (b) goVideo(b.dataset.video, 0); });
+  initRoute(setMode);
+  cueRef({ v: S.step, a: 0, b: 9999 }, false);
   $('#tasks').addEventListener('click', e => { const b = e.target.closest('[data-task]'); if (b) follow(TASKS[+b.dataset.task].go); });
   $('#qgrid').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (b) follow(QUICK[+b.dataset.q].go); });
 

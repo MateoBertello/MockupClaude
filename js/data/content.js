@@ -168,6 +168,9 @@ export const sampleSale = () => [
   { t: 'i', id: 2, code: '1', name: '1/4 Muzza', qty: 1, price: 6200 }
 ];
 
+/* Opciones del menú con una venta en curso (video 13). */
+export const MENU_SALE = ['Cliente Facturacion (O)', 'Descuento Total (D)', 'Devolucion Articulo', 'Factura Electronica (Z)', 'Gastos (Ctrl+G)', 'Suspender Venta (J)'];
+
 /* Clientes de ejemplo para la búsqueda de clientes. */
 export const CUSTOMERS = [
   { doc: '20304050', name: 'Cliente de ejemplo', iva: 'Consumidor Final', balance: -4220 },
